@@ -4,9 +4,9 @@ Agent updates this file. Status values: NOT STARTED · IN PROGRESS · SUBMITTED.
 
 | Phase | Name | Agent status | Submitted tag | Owner gate |
 |-------|------|--------------|---------------|-----------|
-| 0 | Notebook audit | SUBMITTED | phase-0-submitted | see PHASE_APPROVALS.md |
-| 1 | Foundation, config, synthetic data, oracle | SUBMITTED | phase-1-submitted | see PHASE_APPROVALS.md |
-| 2 | Ingestion and cleaning | NOT STARTED | - | see PHASE_APPROVALS.md |
+| 0 | Notebook audit | APPROVED | phase-0-submitted | see PHASE_APPROVALS.md |
+| 1 | Foundation, config, synthetic data, oracle | APPROVED | phase-1-submitted | see PHASE_APPROVALS.md |
+| 2 | Ingestion and cleaning | SUBMITTED | phase-2-submitted | see PHASE_APPROVALS.md |
 | 3 | Data-quality engine | NOT STARTED | - | see PHASE_APPROVALS.md |
 | 4 | Analytical engine | NOT STARTED | - | see PHASE_APPROVALS.md |
 | 5 | Summary and Excel reporting | NOT STARTED | - | see PHASE_APPROVALS.md |

@@ -6,19 +6,40 @@ BASE_DIR = Path(__file__).resolve().parents[2]
 
 
 def test_zero_analytics_code_outside_oracle():
-    """Phase 1 exit criterion: zero analytics code outside oracle/."""
+    """Phase 1/2 constraint: zero analytics code outside oracle/."""
+    from scripts.gate_check import GATE_FILE, current_phase, read_statuses
+
+    try:
+        statuses = read_statuses(GATE_FILE)
+        cur = current_phase(statuses)
+    except Exception:
+        cur = 1
+
     # Check that analytics/ directory does not exist or contains no python code
     analytics_dir = BASE_DIR / "analytics"
     if analytics_dir.exists():
         py_files = list(analytics_dir.glob("**/*.py"))
-        assert len(py_files) == 0, f"Disallowed analytics code found in Phase 1: {py_files}"
+        assert len(py_files) == 0, f"Disallowed analytics code found: {py_files}"
 
-    # Check that core/ contains only foundational configs and exceptions, not analytics pipelines
+    # Check that core/ contains only permitted modules for the active phase
     core_dir = BASE_DIR / "core"
-    allowed_core_files = {"config_models.py", "exceptions.py", "__init__.py"}
+    if cur == 1:
+        allowed_core_files = {"config_models.py", "exceptions.py", "__init__.py"}
+    else:
+        # Phase 2 allows ingestion, cleaning, audit, inspect, pipeline
+        allowed_core_files = {
+            "config_models.py",
+            "exceptions.py",
+            "__init__.py",
+            "ingestion.py",
+            "cleaning.py",
+            "audit.py",
+            "inspect.py",
+            "pipeline.py",
+        }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files
-    assert len(disallowed_core) == 0, f"Disallowed core modules in Phase 1: {disallowed_core}"
+    assert len(disallowed_core) == 0, f"Disallowed core modules in Phase {cur}: {disallowed_core}"
 
 
 def test_reference_notebook_is_pristine():

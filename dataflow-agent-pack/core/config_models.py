@@ -43,6 +43,8 @@ class PopulationConfig(BaseModel):
     sheet_aliases_register: list[str] = Field(..., min_length=1)
     sheet_aliases_kplhiv: list[str] = Field(..., min_length=1)
     header_skiprows: int = Field(default=2, ge=0, le=10)
+    column_aliases: dict[str, list[str]] = Field(default_factory=dict)
+    required_columns: list[str] = Field(default_factory=list)
     defined_package: DefinedPackageConfig
     reporting: ReportingSpecConfig
 
@@ -131,9 +133,18 @@ def load_yaml(path: str | Path) -> dict[str, Any]:
         raise ConfigValidationError(f"YAML syntax error: {exc}", file=str(p)) from exc
 
 
-def load_population_config(path: str | Path) -> PopulationConfig:
-    """Loads and validates a population YAML against PopulationConfig."""
-    p = Path(path)
+def load_population_config(
+    path_or_population: str | Path,
+    config_dir: str | Path = "config/populations",
+) -> PopulationConfig:
+    """Loads and validates a population YAML against PopulationConfig.
+
+    Accepts either an explicit file path or a population name (e.g. 'FSW', 'MSM').
+    """
+    p = Path(path_or_population)
+    if not p.exists() and not str(path_or_population).endswith((".yaml", ".yml")):
+        p = Path(config_dir) / f"{str(path_or_population).lower()}.yaml"
+
     raw = load_yaml(p)
     try:
         return PopulationConfig.model_validate(raw)
