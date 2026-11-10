@@ -13,10 +13,6 @@ authors = [{ name = "DATAFLOW Team" }]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
-exclude = [
-    "reference",
-    "docs",
-]
 
 [tool.ruff.lint]
 select = [
@@ -39,8 +35,9 @@ indent-style = "space"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-testpaths = ["tests"]
+testpaths = ["tests", "scripts/audit"]
 python_files = ["test_*.py", "*_test.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
 addopts = "-q --tb=short"
+

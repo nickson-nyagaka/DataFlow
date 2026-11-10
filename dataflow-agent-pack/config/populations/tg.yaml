@@ -17,5 +17,6 @@ defined_package:
 
 reporting:
   include_nsp_block: false
-  sheet_name_q1: "tg_Summary"
-  sheet_name_sem: "tg_Summary"
+  sheet_name_q1: "KP_Summary"
+  sheet_name_sem: "Summary"
+

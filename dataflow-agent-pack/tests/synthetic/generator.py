@@ -7,7 +7,6 @@ per Master Brief §13.1, and emits ground_truth.json for verification.
 from __future__ import annotations
 
 import argparse
-import datetime
 import hashlib
 import io
 import json
@@ -279,9 +278,6 @@ def write_synthetic_workbook(
 
     buf = io.BytesIO()
     with pd.ExcelWriter(buf, engine="openpyxl") as writer:
-        writer.book.properties.created = datetime.datetime(2026, 1, 1, 0, 0, 0)
-        writer.book.properties.modified = datetime.datetime(2026, 1, 1, 0, 0, 0)
-
         # Write 2 dummy header rows to emulate skiprows=2
         dummy_header = pd.DataFrame([["METADATA ROW 1", ""], ["METADATA ROW 2", ""]])
         dummy_header.to_excel(writer, sheet_name=reg_sheet, index=False, header=False)

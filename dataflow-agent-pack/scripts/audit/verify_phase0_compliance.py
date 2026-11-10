@@ -200,6 +200,18 @@ def check_indicator_naming_consistency():
 
 
 def check_no_application_code():
+    from scripts.gate_check import GATE_FILE, current_phase, read_statuses
+
+    try:
+        statuses = read_statuses(GATE_FILE)
+        cur = current_phase(statuses)
+    except Exception:
+        cur = None
+
+    if cur is not None and cur > 0:
+        print(f"[Check 6] Current phase is {cur} (Phase 0 already approved). Application code is permitted.")
+        return
+
     py_files = list(BASE_DIR.glob("**/*.py"))
     violations = []
     for f in py_files:
