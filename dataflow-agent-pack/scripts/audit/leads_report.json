@@ -1,0 +1,121 @@
+{
+  "L-01": {
+    "lead": "Cell 46: KPLHIV overwritten by Register data when column s_n exists.",
+    "cell": 46,
+    "code_evidence": "if 's_n' in ConsolidatedFSW.columns:\n    ConsolidatedKPLHIV = ConsolidatedFSW.drop(columns=['s_n'])",
+    "verdict": "VERIFIED",
+    "notes": "Cell 46 reassigns ConsolidatedKPLHIV to ConsolidatedFSW without 's_n', completely overwriting KPLHIV with Register data if 's_n' is in ConsolidatedFSW."
+  },
+  "L-02": {
+    "lead": "Cell 38: Rule vs comment mismatch. Decide the intended DQA rule(s) (OQ-07).",
+    "cell": 38,
+    "code_evidence": "#check those who tested Positive and currently on art services\n# Match the columns\nhiv_cols = sorted([col for col in ConsolidatedFSW.columns if col.startswith(\"hiv_tested_results_p_n_nd_na_\")])\nart_cols = sorted([col for col in ConsolidatedFSW.columns if col.startswith(\"currently_on_art_y_n_n_a_\")])\n\n# Build condition\ncondition = False\nfor h_col, a_col in zip(hiv_cols, art_cols):\n    condition |= ConsolidatedFSW[h_col].isin(['Negative']) & ConsolidatedFSW[a_col].eq('Yes')\n",
+    "verdict": "VERIFIED",
+    "notes": "Comment states '#check those who tested Positive and currently on art services', but condition checks `ConsolidatedFSW[h_col].isin(['Negative']) & ConsolidatedFSW[a_col].eq('Yes')` and names the column 'NegativeART'."
+  },
+  "L-03": {
+    "lead": "Cell 17 + 61 + summaries: Duplicates listed but kept; flags propagated across all rows of UIC then summed per row while TotalCohort uses nunique.",
+    "cell": "17, 61, 66",
+    "code_evidence": "Cell 61: has_by_id = row_has.groupby(df[id_col]).transform('max')\nCell 66: TotalCohort=('kp_vp_unique_identifier_code', 'nunique'), HTSQ1=('hts_q1', 'sum')",
+    "verdict": "VERIFIED",
+    "notes": "Duplicates are identified via `.duplicated()` in cell 17 but never removed. In cell 61, `any_in_unique_allrows` transforms max across all rows with that UIC. In cell 66, `.agg(..., 'sum')` sums rows, while `TotalCohort` is `nunique`."
+  },
+  "L-04": {
+    "lead": "Both cleaning cells: Every string cell goes through .capitalize(). Known Positive becomes Known positive, but later comparisons use both spellings.",
+    "cell": "14, 61",
+    "code_evidence": "Cell 14: .map(lambda x: str(x).capitalize() if isinstance(x, str) else x)\nCell 61: [\"'Known positive'\", \"'Known positive'\"]",
+    "verdict": "VERIFIED",
+    "notes": "Cell 14 maps string cells to `.capitalize()`. Cell 61 line 196 looks for 'Known positive'. Furthermore, if another cell or raw data has 'Known Positive', capitalize turns 'Positive' into lowercase 'positive'."
+  },
+  "L-05": {
+    "lead": "Cells 57, 84: Missing age handled inconsistently; missing age lands in 'Below 15'.",
+    "cell": "57, 84",
+    "code_evidence": "Cell 57: '25+' if x >= 25 else 'Below 15'\nCell 84: if pd.isna(age): return 'Unknown'",
+    "verdict": "VERIFIED",
+    "notes": "In cell 57, if age is NaN, conditional falls through to 'Below 15'. In cell 84, NaN age returns 'Unknown'."
+  },
+  "L-06": {
+    "lead": "Cell 84: .fillna('F') on sex.",
+    "cell": 84,
+    "code_evidence": "kvp_merged['sex_group'] = kvp_merged['sex_m_f_'] ... .replace({'MALE': 'M', 'FEMALE': 'F'}).fillna('F')",
+    "verdict": "VERIFIED",
+    "notes": "Cell 84 line 73 explicitly does `.fillna('F')` defaulting all missing sex values to Female."
+  },
+  "L-07": {
+    "lead": "Quarter columns taken positionally (cols[:3], cols[3:6]) after plain sorted() while one check uses natsorted; zip pairing.",
+    "cell": "36, 38, 42, 61",
+    "code_evidence": "Cell 61: prep_cols = sorted(prep_cols); prep_q1_cols = prep_cols[:3]; prep_q2_cols = prep_cols[3:6]\nCell 38: for h_col, a_col in zip(hiv_cols, art_cols): ...\nCell 42: from natsort import natsorted",
+    "verdict": "VERIFIED",
+    "notes": "Plain sorted() sorts lexicographically ('..._1', '..._10', '..._2'). Slicing [:3] takes indices 1, 10, 2 instead of 1, 2, 3 if there are 10+ columns. Also zip pairs by alphabetical sort order without validating month correspondence."
+  },
+  "L-08": {
+    "lead": "Cell 54 and KPLHIV summary: Suppressed sums rows, Total_KPLHIV counts unique clients. No latest VL. Unparseable values become UNKNOWN and count as not suppressed.",
+    "cell": 54,
+    "code_evidence": "Total_KPLHIV=('kp_vp_unique_identifier_code_', 'nunique'), Suppressed=('is_suppressed','sum')\nreturn 'UNKNOWN'\nis_suppressed: if val == 'LDL': return True; elif isinstance(val, int) and val < 200: return True; return False",
+    "verdict": "VERIFIED",
+    "notes": "Cell 54 maps to UNKNOWN if no digit/ldl match, is_suppressed returns False for UNKNOWN, and groupby aggregates Suppressed by 'sum' across rows while Total_KPLHIV is nunique."
+  },
+  "L-09": {
+    "lead": "Summary cells: groupby silently drops missing county/SR/region; join keys normalisation issues (.title() vs .upper(), astype(str)).",
+    "cell": "66, 67, 69, 72",
+    "code_evidence": "Cell 66: groupby(['county', 'sr_name', 'region'])\nCell 72: def normalize_keys(df, keys=('county','sr_name','region')): ... df[k].astype(str).str.strip().str.title()",
+    "verdict": "VERIFIED",
+    "notes": "Standard pandas groupby without dropna=False drops rows where grouping keys are NaN. Also cell 72 normalizes keys with .title(), while cell 14/21 used .upper(), risking merge mismatches and turning NaN into string 'Nan'/'NAN'."
+  },
+  "L-10": {
+    "lead": "Cell 61 (hts_sem): enrolled_Apr_plus uses month >= 7 while comment says 'Apr \u2026 month >= 10'. Month only, no year.",
+    "cell": 61,
+    "code_evidence": "# boolean: enrolled in Apr or later (month >= 10)\nenrolled_Apr_plus = ConsolidatedFSW['date_of_enrolment'].dt.month >= 7",
+    "verdict": "VERIFIED",
+    "notes": "The code explicitly evaluates `.dt.month >= 7` (July) while the comment says 'Apr or later (month >= 10)'. Year is completely ignored, so someone enrolled in July 2018 is treated identically to July 2024."
+  },
+  "L-11": {
+    "lead": "Final summary cell: OLD_Cohort / NEW_Cohort referenced in column ordering but never computed (silently filtered out).",
+    "cell": 69,
+    "code_evidence": "cohort_cols = ['OLD_Cohort', 'NEW_Cohort', 'TotalCohort']\nbase_order = keys + age_group_cols + cohort_cols + remaining",
+    "verdict": "VERIFIED",
+    "notes": "Cell 69 includes 'OLD_Cohort' and 'NEW_Cohort' in `cohort_cols`, but neither is computed in summary_FSW or age_group_counts. Later ordering step checks `if c in final_summary_FSW.columns`, which silently omits them."
+  },
+  "L-12": {
+    "lead": "Hardcoded months (jul...dec), skiprows=2, machine path, Q1/Q2 labels regardless of real calendar.",
+    "cell": "1, 4, 61, 75",
+    "code_evidence": "Cell 01: directory = r'F:\\.shortcut-targets-by-id\\1ITOlPBpvV43hPTKn0MJkDV-Yj1aswrk5\\...'\nCell 04: pd.read_excel('FSW/FSW Register_Summaries.xlsb', skiprows=2)\nCell 61: prep_q1_cols = prep_cols[:3]; prep_q2_cols = prep_cols[3:6]",
+    "verdict": "VERIFIED",
+    "notes": "Absolute machine paths (F:\\...), fixed skiprows=2, hardcoded quarter splits [:3] and [3:6] assuming exactly 6 columns corresponding to fixed months."
+  },
+  "L-13": {
+    "lead": "Cells 75/77/80/82: Four near-identical exporters.",
+    "cell": "75, 77, 80, 82",
+    "code_evidence": "Cells 75 (350 lines), 77 (350 lines), 80 (370 lines), 82 (409 lines) repeat ~90% identical openpyxl formatting code.",
+    "verdict": "VERIFIED",
+    "notes": "Each cell re-implements openpyxl workbook creation, cell border styling, font definitions, header merging, and column width adjustments with slight variations for PWID and period mode."
+  },
+  "L-14": {
+    "lead": "Cleaning cells: .map(...) over every cell of an 80k x 300 frame; very slow.",
+    "cell": 14,
+    "code_evidence": "ConsolidatedKPLHIV = ConsolidatedKPLHIV.map(lambda x: str(x).capitalize() if isinstance(x, str) else x)\nConsolidatedKPLHIV = ConsolidatedKPLHIV.map(lambda x: x.strip() if isinstance(x, str) else x)",
+    "verdict": "VERIFIED",
+    "notes": "Calling DataFrame.map(...) twice elementwise across an 80k x 300 DataFrame executes 48 million Python lambda calls, causing extreme performance degradation."
+  },
+  "L-15": {
+    "lead": "Cell 61: Semester logic differs by indicator (HTS uses AND/OR, others union; New_on_ART uses Q1 columns only).",
+    "cell": 61,
+    "code_evidence": "prep_sem: (prep_q1 + prep_q2) >= 1\nhts_sem: (hts_q1 > 0 & hts_q2 > 0) | (hts_q2 > 0 & enrolled_Apr_plus)\nhts_sem_any: (hts_q1 > 0 | hts_q2 > 0)\nNew_on_ART: cell 66 only has New_on_ART (from Q1) and New_on_ART_Q2 (from Q2), no SEM!",
+    "verdict": "VERIFIED",
+    "notes": "PrEP, STI, TB, Condoms, NSP, DefinedPackage use >= 1 (union / OR). HTS has both hts_sem (AND/OR with enrolment date) and hts_sem_any (OR). Active ART and New_on_ART do not have a defined semester column in Cell 66 summary."
+  },
+  "L-16": {
+    "lead": "CCC check: One direction only (KPLHIV -> Register). Null CCC numbers are not counted.",
+    "cell": 52,
+    "code_evidence": "left_key = 'ccc_number_nupi_n_a_10_digit_number_'\nright_ids = set(right_ser.unique())\nleft_norm = _normalize_ids(ConsolidatedKPLHIV[left_key])\n# mask only for non-null left IDs; do NOT count missing left IDs as mismatches",
+    "verdict": "VERIFIED",
+    "notes": "Cell 52 checks if KPLHIV CCC numbers exist in Register (ConsolidatedFSW), but does NOT check if Register CCC numbers exist in KPLHIV. Additionally, null/blank CCC numbers on the left are explicitly dropped from mismatch detection."
+  },
+  "L-17": {
+    "lead": "Cell 61: NSP requirements commented out of both Defined Package pathways, including the PWID path (see BR-001).",
+    "cell": 61,
+    "code_evidence": "# (ConsolidatedFSW['nsp_q1'] == 1) &\n# (ConsolidatedFSW['nsp_q2'] == 1) &\n#  (ConsolidatedFSW['nsp_q1'] == 1) &\n#  (ConsolidatedFSW['nsp_q2'] == 1) &",
+    "verdict": "VERIFIED",
+    "notes": "In Cell 61, lines 206, 216, 229, and 240 have the NSP conditions commented out in both plhivservice (pathway 2) and definedpackage (pathway 1). Thus NSP is ignored for all populations in the notebook."
+  }
+}
