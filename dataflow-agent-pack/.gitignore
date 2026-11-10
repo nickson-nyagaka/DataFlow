@@ -1,0 +1,25 @@
+# Environments and caches
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.pyc
+
+# Runtime output (may contain identifiers)
+runtime/temporary/
+runtime/exports/
+runtime/logs/
+
+# Real data never belongs in the repo
+private_data/
+*.xlsb
+*.original.ipynb
+*.xlsx
+*.xls
+*.csv
+!templates/**/*.xlsx
+!tests/fixtures/**/*.xlsx
+!tests/fixtures/**/*.csv
