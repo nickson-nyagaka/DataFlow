@@ -1,0 +1,14 @@
+id: "hts"
+name: "HIV Testing Services"
+grain: "client"
+source_prefix: "hiv_tested_results_p_n_nd_na_"
+values:
+  tested: ["Negative", "Positive"]
+  negative: ["Negative"]
+  positive: ["Positive"]
+  known_positive: ["Known positive"]
+semester_logic:
+  primary: "hts_sem_any"
+  threshold_formula: "hts_sem"
+  open_question_id: "OQ-06"
+status: "provisional"

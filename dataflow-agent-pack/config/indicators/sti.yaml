@@ -1,0 +1,7 @@
+id: "sti"
+name: "Sexually Transmitted Infections"
+grain: "client"
+source_prefix_screened: "screened_for_stis_y_n_"
+source_prefix_diagnosed: "diagnosed_with_sti_y_n_"
+source_prefix_treated: "treated_for_stis_y_n_na_r_referred_"
+status: "confirmed"

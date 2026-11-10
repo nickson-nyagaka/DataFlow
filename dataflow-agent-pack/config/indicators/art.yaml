@@ -1,0 +1,7 @@
+id: "art"
+name: "Antiretroviral Therapy"
+grain: "client"
+source_prefix: "currently_on_art_y_n_n_a_"
+values:
+  on_art: ["Yes"]
+status: "confirmed"

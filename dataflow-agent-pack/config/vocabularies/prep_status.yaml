@@ -1,0 +1,14 @@
+field: "prep_status"
+canonical_values:
+  - "Initiated"
+  - "Restart"
+  - "Switched"
+  - "Refill"
+  - "Discontinued"
+case_variants:
+  "initiated": "Initiated"
+  "restart": "Restart"
+  "switched": "Switched"
+  "refill": "Refill"
+  "discontinued": "Discontinued"
+status: "confirmed"

@@ -1,0 +1,21 @@
+code: "FSW"
+name: "Female Sex Workers"
+sheet_aliases_register:
+  - "Register"
+  - "FSW"
+sheet_aliases_kplhiv:
+  - "KPLHIV"
+header_skiprows: 2
+
+defined_package:
+  require_nsp: false
+  require_hts: true
+  require_sti: true
+  require_tb: true
+  require_condoms: true
+  require_he_rrc: true
+
+reporting:
+  include_nsp_block: false
+  sheet_name_q1: "fsw_Summary"
+  sheet_name_sem: "fsw_Summary"

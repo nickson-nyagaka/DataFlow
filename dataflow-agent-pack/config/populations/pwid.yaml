@@ -1,0 +1,21 @@
+code: "PWID"
+name: "People Who Inject Drugs"
+sheet_aliases_register:
+  - "Register"
+  - "PWID"
+sheet_aliases_kplhiv:
+  - "KPLHIV"
+header_skiprows: 2
+
+defined_package:
+  require_nsp: true
+  require_hts: true
+  require_sti: true
+  require_tb: true
+  require_condoms: true
+  require_he_rrc: true
+
+reporting:
+  include_nsp_block: true
+  sheet_name_q1: "PWID_Summary"
+  sheet_name_sem: "PWID_Summary"

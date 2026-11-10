@@ -1,0 +1,33 @@
+fonts:
+  header: "Cascadia Code"
+  body: "Candara"
+  size: 11
+
+fills:
+  subheader: "FF7D81"
+  total: "6BD669"
+  fallback: "FF7D81"
+
+group_colors:
+  COUNTY: "00B050"
+  SR NAME: "00B050"
+  REGION: "00B050"
+  AGE GROUP: "00B050"
+  TOTAL: "00B050"
+  HIV TESTING & PLHIV: "8EA9DB"
+  DEFINED PACKAGE: "C6E0B4"
+  "PREP ": "FFE699"
+  ART: "8EA9DB"
+  STI SCREENING: "F8CBAD"
+  STI DIAGNOSIS: "F8CBAD"
+  STI TREATMENT: "F8CBAD"
+  TB SCREENING: "B3A2C7"
+  PEER EDUCATION: "FFFF00"
+  CONDOMS: "D9D9D9"
+  NSP: "FF7D81"
+
+dimensions:
+  col_width_keys: 22
+  col_width_data: 14
+  row_height_group: 22
+  row_height_sub: 30

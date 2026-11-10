@@ -1,0 +1,12 @@
+field: "hiv_tested_results"
+canonical_values:
+  - "Negative"
+  - "Positive"
+  - "Known positive"
+case_variants:
+  "negative": "Negative"
+  "positive": "Positive"
+  "known positive": "Known positive"
+  "Known Positive": "Known positive"
+  "KNOWN POSITIVE": "Known positive"
+status: "confirmed"

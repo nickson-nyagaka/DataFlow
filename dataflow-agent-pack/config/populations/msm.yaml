@@ -1,0 +1,21 @@
+code: "MSM"
+name: "Men who have Sex with Men"
+sheet_aliases_register:
+  - "MSM"
+  - "Register"
+sheet_aliases_kplhiv:
+  - "KPLHIV"
+header_skiprows: 2
+
+defined_package:
+  require_nsp: false
+  require_hts: true
+  require_sti: true
+  require_tb: true
+  require_condoms: true
+  require_he_rrc: true
+
+reporting:
+  include_nsp_block: false
+  sheet_name_q1: "msm_Summary"
+  sheet_name_sem: "msm_Summary"

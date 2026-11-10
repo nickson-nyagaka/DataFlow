@@ -1,0 +1,23 @@
+id: "defined_package"
+name: "Defined Package"
+grain: "client"
+pathways:
+  general:
+    required_components:
+      - "hts"
+      - "sti_screening"
+      - "tb_screening"
+      - "condoms"
+      - "he_rrc"
+    pwid_additional_component: "nsp"
+    rule_reference: "BR-001 / D-001"
+  plhiv_service:
+    required_components:
+      - "known_positive"
+      - "sti_screening"
+      - "tb_screening"
+      - "condoms"
+      - "he_rrc"
+    pwid_nsp_required: false
+    open_question_id: "OQ-01"
+status: "confirmed"

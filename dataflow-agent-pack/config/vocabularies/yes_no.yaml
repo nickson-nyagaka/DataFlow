@@ -1,0 +1,12 @@
+field: "yes_no"
+canonical_values:
+  - "Yes"
+  - "No"
+case_variants:
+  "yes": "Yes"
+  "no": "No"
+  "YES": "Yes"
+  "NO": "No"
+  "Y": "Yes"
+  "N": "No"
+status: "confirmed"

@@ -1,0 +1,6 @@
+id: "condoms"
+name: "Condom Distribution"
+grain_client: "client"
+grain_commodity: "commodity"
+source_prefix: "condoms_distributed_indicate_number_n_a_for_inmates_"
+status: "confirmed"

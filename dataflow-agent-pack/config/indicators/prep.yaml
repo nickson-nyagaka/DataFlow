@@ -1,0 +1,10 @@
+id: "prep"
+name: "Pre-Exposure Prophylaxis"
+grain: "client"
+source_prefix: "prep_status_"
+values:
+  active: ["Initiated", "Restart", "Switched", "Refill"]
+  refill: ["Refill"]
+  initiated: ["Initiated"]
+  discontinued: ["Discontinued"]
+status: "confirmed"

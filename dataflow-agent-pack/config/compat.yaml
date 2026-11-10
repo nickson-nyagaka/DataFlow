@@ -1,0 +1,7 @@
+# Compatibility switches for legacy notebook bug-compatibility (used during Phase 4 differential testing)
+legacy_missing_age_below_15: true
+legacy_impute_missing_sex_f: true
+legacy_row_sum_flags: true
+legacy_hts_sem_month_ge_7: true
+legacy_comment_out_pwid_nsp: true
+legacy_capitalize_vocabulary: true

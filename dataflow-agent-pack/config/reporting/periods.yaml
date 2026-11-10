@@ -1,0 +1,13 @@
+reporting_cycle: "Jul-Dec 2026"
+q1_columns_count: 3
+q2_columns_count: 3
+q1_months:
+  - "jul"
+  - "aug"
+  - "sep"
+q2_months:
+  - "oct"
+  - "nov"
+  - "dec"
+status: "unconfirmed"
+open_question_id: "OQ-06"

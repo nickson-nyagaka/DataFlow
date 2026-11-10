@@ -1,0 +1,9 @@
+id: "nsp"
+name: "Needles and Syringes Programme"
+grain_client: "client"
+grain_commodity: "commodity"
+populations:
+  - "PWID"
+source_prefix: "needles_and_syringes_distributed_indicate_number_n_a_for_inmates_"
+rule_reference: "BR-001 / BR-002 / D-001"
+status: "confirmed"

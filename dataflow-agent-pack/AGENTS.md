@@ -107,3 +107,107 @@ The Owner commits the baseline. One branch per phase: `phase/N-slug`. Small comm
 - Plain, precise English; no hype. Lead with what you did, what you verified, and what you need from the Owner.
 - Decisions → `docs/DECISION_LOG.md`. Questions → `docs/OPEN_QUESTIONS.md`. Progress → `docs/PROGRESS.md`.
 - If stuck after three genuine attempts, write the blocker (what you tried, evidence) and stop that task.
+# PROJECT AGENT RULES — OPEN QUESTIONS
+
+You are building and maintaining an application from an existing notebook and
+related project files.
+
+Before implementing, changing, or finalizing any feature, inspect the notebook,
+data dictionary, existing code, sample data, and project requirements.
+
+If any business rule, data structure, validation rule, edge case, expected
+output, or user-facing behavior is unclear, STOP and ask me first.
+
+Do not guess.
+Do not assume.
+Do not silently choose a default.
+Do not continue coding until I answer the blocking questions.
+
+## Open Question IDs
+
+Create a unique Open Question ID for every unresolved item.
+
+Use sequential IDs:
+
+OQ-01
+OQ-02
+OQ-03
+
+Do not reuse an ID after it has been resolved.
+
+## Required format
+
+For every open question, show:
+
+OQ-XX: [Question]
+
+- Why it matters:
+- Affected file/function/column/phase:
+- Options:
+  - A. [Option]
+  - B. [Option]
+  - C. [Option, if applicable]
+- Recommended default, if any:
+- Blocking: Yes/No
+
+## Question limit
+
+Ask no more than 10 questions at a time.
+
+Prioritize questions that block the current phase.
+
+If there are more than 10 questions, list the first 10, wait for my answers,
+then ask the next batch.
+
+## How I will answer
+
+I will answer using this format:
+
+OQ-01: [my answer]
+OQ-02: [my answer]
+
+## After I answer
+
+1. Mark each answered OQ as `Answered` or `Resolved`.
+2. Apply my decision consistently across:
+   - The notebook
+   - The data dictionary
+   - Data-cleaning logic
+   - Data generator or mock data
+   - Validation rules
+   - App UI
+   - Reports, exports, and calculations
+3. Do not reopen a resolved question unless the underlying data, requirement,
+   or business rule changes.
+4. If a later change conflicts with a previous decision, ask me before changing it.
+
+## Open Questions register
+
+Maintain a file named:
+
+OPEN_QUESTIONS.md
+
+in the project root.
+
+For every question, record:
+
+- OQ ID
+- Question
+- Status: Open / Answered / Resolved / Withdrawn
+- Decision
+- Date decided
+- Files or functions affected
+
+## Before coding
+
+Before writing or modifying code, show me:
+
+1. The current phase or task
+2. The list of blocking Open Questions, if any
+3. What you will build after I answer
+
+If there are no blocking questions, explicitly state:
+
+“No blocking open questions. Proceeding with the following assumptions:”
+
+Then list every assumption clearly before coding.
