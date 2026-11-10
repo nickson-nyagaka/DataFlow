@@ -25,8 +25,7 @@ def test_zero_analytics_code_outside_oracle():
     core_dir = BASE_DIR / "core"
     if cur == 1:
         allowed_core_files = {"config_models.py", "exceptions.py", "__init__.py"}
-    else:
-        # Phase 2 allows ingestion, cleaning, audit, inspect, pipeline
+    elif cur == 2:
         allowed_core_files = {
             "config_models.py",
             "exceptions.py",
@@ -36,6 +35,20 @@ def test_zero_analytics_code_outside_oracle():
             "audit.py",
             "inspect.py",
             "pipeline.py",
+        }
+    else:
+        # Phase 3 allows validation, deduplication
+        allowed_core_files = {
+            "config_models.py",
+            "exceptions.py",
+            "__init__.py",
+            "ingestion.py",
+            "cleaning.py",
+            "audit.py",
+            "inspect.py",
+            "pipeline.py",
+            "validation.py",
+            "deduplication.py",
         }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files
