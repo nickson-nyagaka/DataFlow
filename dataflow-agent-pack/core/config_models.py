@@ -112,6 +112,7 @@ class CompatConfig(BaseModel):
     legacy_hts_sem_month_ge_7: bool = True
     legacy_comment_out_pwid_nsp: bool = True
     legacy_capitalize_vocabulary: bool = True
+    legacy_lexicographic_column_sort: bool = True
 
 
 def load_yaml(path: str | Path) -> dict[str, Any]:

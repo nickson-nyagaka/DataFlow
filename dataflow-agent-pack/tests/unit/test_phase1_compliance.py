@@ -15,11 +15,11 @@ def test_zero_analytics_code_outside_oracle():
     except Exception:
         cur = 1
 
-    # Check that analytics/ directory does not exist or contains no python code
+    # Check that analytics/ directory contains no python code in Phases 0-3
     analytics_dir = BASE_DIR / "analytics"
-    if analytics_dir.exists():
+    if cur < 4 and analytics_dir.exists():
         py_files = list(analytics_dir.glob("**/*.py"))
-        assert len(py_files) == 0, f"Disallowed analytics code found: {py_files}"
+        assert len(py_files) == 0, f"Disallowed analytics code found in Phase {cur}: {py_files}"
 
     # Check that core/ contains only permitted modules for the active phase
     core_dir = BASE_DIR / "core"
@@ -36,7 +36,7 @@ def test_zero_analytics_code_outside_oracle():
             "inspect.py",
             "pipeline.py",
         }
-    else:
+    elif cur == 3:
         # Phase 3 allows validation, deduplication
         allowed_core_files = {
             "config_models.py",
@@ -49,6 +49,22 @@ def test_zero_analytics_code_outside_oracle():
             "pipeline.py",
             "validation.py",
             "deduplication.py",
+        }
+    else:
+        # Phase 4 allows periods, compat
+        allowed_core_files = {
+            "config_models.py",
+            "exceptions.py",
+            "__init__.py",
+            "ingestion.py",
+            "cleaning.py",
+            "audit.py",
+            "inspect.py",
+            "pipeline.py",
+            "validation.py",
+            "deduplication.py",
+            "periods.py",
+            "compat.py",
         }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files

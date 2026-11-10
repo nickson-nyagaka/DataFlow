@@ -9,6 +9,6 @@ q2_months:
   - "oct"
   - "nov"
   - "dec"
-status: "unconfirmed"
-open_question_id: "OQ-05"
+status: "confirmed"
+open_question_id: "OQ-05 (Resolved - D-023)"
 

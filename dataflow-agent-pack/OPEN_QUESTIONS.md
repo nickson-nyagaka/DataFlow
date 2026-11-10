@@ -6,39 +6,26 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-01: Is NSP also required in the PLHIV-service pathway for PWID?
-- **Status:** Open
-- **Why it matters:** Changes Defined Package calculation for KPLHIV PWID clients.
+- **Status:** Resolved
+- **Decision:** Require NSP in both the general Defined Package pathway and the PLHIV-service pathway for PWID (`require_nsp: true`). FSW, MSM, TG, VP do not require NSP (D-020).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/defined_package.py`, `config/populations/pwid.yaml`, Phase 4.
-- **Options:**
-  - A. Yes
-  - B. No (until approved definition says otherwise)
-  - C. Only for PWID with injecting risk
-- **Recommended default:** B. No
-- **Blocking:** No (Phase 4)
 
 ---
 
 ### OQ-02: Which templates use which age categories (notebook cells 57 vs 84 differ)? Should missing age be `Unknown`?
-- **Status:** Open
-- **Why it matters:** Determines age grouping columns in final Excel summary packages.
-- **Affected file/function/column/phase:** `analytics/demographics.py`, `reporting/`, Phase 4/5.
-- **Options:**
-  - A. List per template, missing age as `Unknown`
-  - B. Standardize across all populations
-- **Recommended default:** A. List per template, missing age as `Unknown`
-- **Blocking:** No (Phase 4)
+- **Status:** Resolved
+- **Decision:** Standard 4-tier age bands (`Below 15`, `15-19`, `20-24`, `25+`). Missing ages are classified as `'Unknown'` and flagged in DQA (never defaulted) (D-021).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `analytics/demographics.py`, `reporting/`, Phase 4.
 
 ---
 
 ### OQ-03: Missing sex: `Unknown` column in pivots, or excluded with a footnote?
-- **Status:** Open
-- **Why it matters:** Notebook cell 84 uses `.fillna('F')`. Rule D-003 prohibits defaulting missing sex.
-- **Affected file/function/column/phase:** `analytics/demographics.py`, `reporting/`, Phase 4/5.
-- **Options:**
-  - A. `Unknown` column in pivots
-  - B. Excluded from pivot with footnote
-- **Recommended default:** A. `Unknown` column
-- **Blocking:** No (Phase 4)
+- **Status:** Resolved
+- **Decision:** Exclude records with missing sex from sex-disaggregated breakdowns and report an explicit footnote `(Missing Sex: N)` (never defaulting to 'F') (D-022).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `analytics/demographics.py`, `reporting/`, Phase 4.
 
 ---
 
@@ -51,24 +38,18 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-05: Reporting calendar: which visit columns/months belong to Q1 and Q2 in each register template?
-- **Status:** Open
-- **Why it matters:** Period engine column mappings and semester boundary calculations.
+- **Status:** Resolved
+- **Decision:** Exactly 3 visits per quarter across all 5 populations (Visits 1-3 = Q1, Visits 4-6 = Q2, Visits 1-6 = SEM), driven by explicit mapping in `periods.yaml` (D-023).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `core/periods.py`, `config/reporting/periods.yaml`, Phase 4.
-- **Options:**
-  - A. Owner confirms per-population calendar mapping
-- **Recommended default:** Standard 3 visits per quarter
-- **Blocking:** No (Phase 4)
 
 ---
 
 ### OQ-06: Intended rule for `hts_sem`: "(Q1 and Q2) or (Q2 and enrolled in/after month M)"
-- **Status:** Open
-- **Why it matters:** Semester HTS indicator calculation.
+- **Status:** Resolved
+- **Decision:** Any test in semester: tested in Q1 OR tested in Q2 (`hts_q1 == 1 | hts_q2 == 1`) (D-024).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/hts.py`, Phase 4.
-- **Options:**
-  - A. M = 4 / 7 / 10 configured in reporting cycle
-- **Recommended default:** Config per reporting cycle
-- **Blocking:** No (Phase 4)
 
 ---
 
@@ -89,25 +70,18 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-09: Viral load suppression definition and window
-- **Status:** Open
-- **Why it matters:** Viral load suppression indicator denominator and LDL interpretation.
+- **Status:** Resolved
+- **Decision:** Suppression rate denominator is KPLHIV clients with a documented valid VL result; `>LDL` is unparseable and flagged for DQA; suppression defined as `LDL`, `<LDL`, or numeric < 200 copies/ml (D-025).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/viral_load.py`, Phase 4.
-- **Options:**
-  - A. Latest in reporting period, LDL or <200 copies/ml
-  - B. Latest in 12 months
-- **Recommended default:** A. Latest in period per D-002
-- **Blocking:** No (Phase 4)
 
 ---
 
 ### OQ-10: Active clients definition across KPLHIV and Register
-- **Status:** Open
-- **Why it matters:** Reconciles monthly active columns vs ART outcome status.
+- **Status:** Resolved
+- **Decision:** Count of all registered KPLHIV clients (`nunique(uic)` in KPLHIV sheet), exactly matching legacy notebook cell 66 (D-026).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/kplhiv.py`, Phase 4.
-- **Options:**
-  - A. Owner confirms applicable month columns per cycle
-- **Recommended default:** Monthly active columns matching period
-- **Blocking:** No (Phase 4)
 
 ---
 
@@ -124,14 +98,10 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-12: `TotalCohort` denominator definition
-- **Status:** Open
-- **Why it matters:** Denominator across summary indicators.
+- **Status:** Resolved
+- **Decision:** Unique UIC count of all active register rows (`nunique(uic)` in Register sheet), exactly matching legacy notebook cell 66 (D-027).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/summaries.py`, Phase 4.
-- **Options:**
-  - A. Unique UIC count of all active register rows
-  - B. Only clients with activity or enrolment in reporting period
-- **Recommended default:** A. Unique UIC count of all register rows
-- **Blocking:** No (Phase 4)
 
 ---
 
