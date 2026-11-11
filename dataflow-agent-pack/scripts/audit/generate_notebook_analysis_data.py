@@ -6,7 +6,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 # Define cell metadata
@@ -63,9 +63,7 @@ cell_meta = {
     6: {
         "title": "Load MSM Datasets (Commented)",
         "purpose": "Commented loader for MSM Register ('MSM') and KPLHIV sheets from .xlsb with skiprows=2 and clean_names.",
-        "inputs": [
-            "'MSM/National Consolidated KVP Cohort Register MSM_Q9 JUL-SEP.xlsb'"
-        ],
+        "inputs": ["'MSM/National Consolidated KVP Cohort Register MSM_Q9 JUL-SEP.xlsb'"],
         "outputs": ["ConsolidatedFSW (commented)", "ConsolidatedKPLHIV (commented)"],
         "deps": [1],
         "group": "Ingestion (Alternative Population)",
@@ -736,8 +734,6 @@ cell_meta = {
 }
 
 print(f"Total entries defined: {len(cell_meta)}")
-with open(
-    Path(__file__).resolve().parent / "cell_meta.json", "w", encoding="utf-8"
-) as f:
+with open(Path(__file__).resolve().parent / "cell_meta.json", "w", encoding="utf-8") as f:
     json.dump(cell_meta, f, indent=2)
 print("Saved cell_meta.json")

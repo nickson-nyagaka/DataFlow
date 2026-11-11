@@ -27,16 +27,12 @@ def check_notebook_analysis():
 
     # Check count of code cells in table
     code_rows = re.findall(r"\|\s*(\d{2})\s*\|\s*\*\*CODE\*\*", content)
-    print(
-        f"[Check 1] Code cells documented in NOTEBOOK_ANALYSIS: {len(code_rows)} / 58"
-    )
+    print(f"[Check 1] Code cells documented in NOTEBOOK_ANALYSIS: {len(code_rows)} / 58")
     assert len(code_rows) == 58, f"Expected 58 code cells, found {len(code_rows)}"
 
     # Check exporter diff and proposal
     assert "Exporter Comparison Matrix" in content, "Exporter diff matrix missing!"
-    assert "Unified Parametrised Exporter Proposal" in content, (
-        "Exporter proposal missing!"
-    )
+    assert "Unified Parametrised Exporter Proposal" in content, "Exporter proposal missing!"
     print(
         "  -> NOTEBOOK_ANALYSIS verified (58 code cells, Mermaid diagram, exporter diff & proposal)."
     )
@@ -49,13 +45,11 @@ def check_indicator_dictionary():
 
     # Check semester logic table
     assert "Semester Logic by Indicator Family" in content, "Semester table missing!"
-    assert "HTS (General)" in content and "Defined Package" in content, (
-        "Incomplete semester table!"
-    )
+    assert "HTS (General)" in content and "Defined Package" in content, "Incomplete semester table!"
 
     # Check indicators present
     # Load extracted columns
-    with open(AUDIT_DIR / "cell_meta.json", "r", encoding="utf-8") as f:
+    with open(AUDIT_DIR / "cell_meta.json", encoding="utf-8") as f:
         json.load(f)
 
     # Check critical columns
@@ -174,9 +168,7 @@ def check_population_rules_and_excel_spec():
 def check_indicator_naming_consistency():
     # Compare indicator names across INDICATOR_DICTIONARY and EXCEL_OUTPUT_SPECIFICATION
     id_content = (DOCS_DIR / "INDICATOR_DICTIONARY.md").read_text(encoding="utf-8")
-    es_content = (DOCS_DIR / "EXCEL_OUTPUT_SPECIFICATION.md").read_text(
-        encoding="utf-8"
-    )
+    es_content = (DOCS_DIR / "EXCEL_OUTPUT_SPECIFICATION.md").read_text(encoding="utf-8")
 
     # Find all columns listed in EXCEL_OUTPUT_SPECIFICATION blocks
     cols_in_spec = re.findall(r"columns:\s*\[(.*?)\]", es_content)
@@ -209,7 +201,9 @@ def check_no_application_code():
         cur = None
 
     if cur is not None and cur > 0:
-        print(f"[Check 6] Current phase is {cur} (Phase 0 already approved). Application code is permitted.")
+        print(
+            f"[Check 6] Current phase is {cur} (Phase 0 already approved). Application code is permitted."
+        )
         return
 
     py_files = list(BASE_DIR.glob("**/*.py"))
@@ -223,9 +217,7 @@ def check_no_application_code():
     print(
         f"[Check 6] Python files found: {len(py_files)}. Non-script violations: {len(violations)}"
     )
-    assert len(violations) == 0, (
-        f"Disallowed application code found in Phase 0: {violations}"
-    )
+    assert len(violations) == 0, f"Disallowed application code found in Phase 0: {violations}"
     print("  -> Zero application code outside scripts/ confirmed.")
 
 

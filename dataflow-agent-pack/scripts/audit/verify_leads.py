@@ -7,7 +7,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 
@@ -58,18 +58,14 @@ leads_report["L-03"] = {
     "lead": "Cell 17 + 61 + summaries: Duplicates listed but kept; flags propagated across all rows of UIC then summed per row while TotalCohort uses nunique.",
     "cell": "17, 61, 66",
     "code_evidence": "Cell 61: has_by_id = row_has.groupby(df[id_col]).transform('max')\nCell 66: TotalCohort=('kp_vp_unique_identifier_code', 'nunique'), HTSQ1=('hts_q1', 'sum')",
-    "verdict": "VERIFIED"
-    if has_c17_dups and has_any_in_unique and has_c66_sum
-    else "REFUTED",
+    "verdict": "VERIFIED" if has_c17_dups and has_any_in_unique and has_c66_sum else "REFUTED",
     "notes": "Duplicates are identified via `.duplicated()` in cell 17 but never removed. In cell 61, `any_in_unique_allrows` transforms max across all rows with that UIC. In cell 66, `.agg(..., 'sum')` sums rows, while `TotalCohort` is `nunique`.",
 }
 
 # L-04: Both cleaning cells: Every string cell goes through .capitalize(). 'Known Positive' becomes 'Known positive', but later code compares against both spellings.
 c14 = get_cell(14)
 c61 = get_cell(61)
-has_capitalize = (
-    ".map(lambda x: str(x).capitalize() if isinstance(x, str) else x)" in c14
-)
+has_capitalize = ".map(lambda x: str(x).capitalize() if isinstance(x, str) else x)" in c14
 # Check spellings in c61
 kp_spelling_c61 = re.findall(r"['\"](?:Known [Pp]ositive)['\"]", c61)
 leads_report["L-04"] = {
@@ -214,8 +210,6 @@ leads_report["L-17"] = {
 for lid, info in leads_report.items():
     print(f"[{info['verdict']}] {lid}: {info['lead'][:70]}")
 
-with open(
-    Path(__file__).resolve().parent / "leads_report.json", "w", encoding="utf-8"
-) as f:
+with open(Path(__file__).resolve().parent / "leads_report.json", "w", encoding="utf-8") as f:
     json.dump(leads_report, f, indent=2)
 print("Saved leads_report.json")

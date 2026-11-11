@@ -7,6 +7,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import time
 import tracemalloc
+
 import numpy as np
 import pandas as pd
 
@@ -36,7 +37,9 @@ def main():
 
     for v in range(1, 11):
         data[f"prep_status_{v}"] = ["Refill" if v % 2 == 1 else "None"] * num_rows
-        data[f"hiv_tested_results_p_n_nd_na_{v}"] = ["Negative" if v % 3 == 0 else "None"] * num_rows
+        data[f"hiv_tested_results_p_n_nd_na_{v}"] = [
+            "Negative" if v % 3 == 0 else "None"
+        ] * num_rows
         data[f"currently_on_art_y_n_n_a_{v}"] = ["No"] * num_rows
         data[f"art_outcome_{v}"] = ["None"] * num_rows
         data[f"screened_for_stis_y_n_{v}"] = ["Yes" if v % 2 == 1 else "No"] * num_rows
@@ -44,9 +47,13 @@ def main():
         data[f"treated_for_stis_y_n_na_r_referred_{v}"] = ["No"] * num_rows
         data[f"screened_for_tb_{v}"] = ["Yes" if v % 2 == 1 else "No"] * num_rows
         data[f"diagnosed_with_tb_{v}"] = ["No"] * num_rows
-        data[f"condoms_distributed_indicate_number_n_a_for_inmates_{v}"] = [25 if v % 2 == 1 else 0] * num_rows
+        data[f"condoms_distributed_indicate_number_n_a_for_inmates_{v}"] = [
+            25 if v % 2 == 1 else 0
+        ] * num_rows
         data[f"received_peer_education_y_n_{v}"] = ["Yes" if v % 2 == 1 else "No"] * num_rows
-        data[f"provided_with_risk_reduction_counselling_y_n_{v}"] = ["Yes" if v % 2 == 1 else "No"] * num_rows
+        data[f"provided_with_risk_reduction_counselling_y_n_{v}"] = [
+            "Yes" if v % 2 == 1 else "No"
+        ] * num_rows
 
     df = pd.DataFrame(data)
     print(f"DataFrame shape: {df.shape}")

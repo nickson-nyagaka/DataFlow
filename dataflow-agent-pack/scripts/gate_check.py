@@ -8,6 +8,7 @@ Usage:
 The agent may only work on the lowest-numbered phase that is not APPROVED.
 Approvals must be contiguous: phase N cannot be APPROVED while an earlier phase is not.
 """
+
 from __future__ import annotations
 
 import pathlib
@@ -57,9 +58,15 @@ def main(argv: list[str]) -> int:
     statuses = read_statuses(GATE_FILE)
     cur = current_phase(statuses)
     if cur is None:
-        print("ALL PHASES APPROVED. No further phase work is allowed without new instructions from the Owner.")
+        print(
+            "ALL PHASES APPROVED. No further phase work is allowed without new instructions from the Owner."
+        )
         return 0 if len(argv) < 2 else 1
-    rework = " (REJECTED: rework only the defects in docs/gates/REJECTIONS.md)" if statuses[cur] == "REJECTED" else ""
+    rework = (
+        " (REJECTED: rework only the defects in docs/gates/REJECTIONS.md)"
+        if statuses[cur] == "REJECTED"
+        else ""
+    )
     if len(argv) < 2:
         print(f"ALLOWED PHASE: {cur}{rework}")
         print("You may work on this phase and no other. Do not edit docs/gates/PHASE_APPROVALS.md.")

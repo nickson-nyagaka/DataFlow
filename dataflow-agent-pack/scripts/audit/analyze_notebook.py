@@ -8,7 +8,7 @@ DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
 
 def main():
-    with open(DUMP_PATH, "r", encoding="utf-8") as f:
+    with open(DUMP_PATH, encoding="utf-8") as f:
         cells = json.load(f)
 
     print(f"Loaded {len(cells)} cells.")

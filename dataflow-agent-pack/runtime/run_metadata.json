@@ -1,0 +1,23 @@
+{
+  "timestamp": "2026-11-11T06:47:43.533014+00:00",
+  "input_file_name": "cohort_10k.xlsx",
+  "input_file_hash": "822e99c607d41064b0b8579dc4d4fb99f3eab451f6bcae6178fdf4731c2ce590",
+  "config_hash": "a7db5857f88bf95f",
+  "population": "FSW",
+  "period_mode": "SEM",
+  "total_cohort": 1000,
+  "active_kplhiv": 500,
+  "total_dqa_exceptions": 400,
+  "critical_dqa_count": 400,
+  "major_dqa_count": 0,
+  "minor_dqa_count": 0,
+  "duration_seconds": 71.654,
+  "stage_timings": {
+    "ingestion": 14.014,
+    "cleaning": 0.781,
+    "dqa": 1.46,
+    "analytics": 1.788,
+    "reporting": 53.608
+  },
+  "status": "SUCCESS"
+}

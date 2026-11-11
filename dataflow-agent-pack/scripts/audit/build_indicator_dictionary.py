@@ -1080,9 +1080,7 @@ def build_indicator_dictionary():
     lines.append(
         "Complete indicator and column specifications for DATAFLOW, extracted directly from executable code in `reference/OPTIMIZED_DATA_MGT.sanitized.ipynb`.\n"
     )
-    lines.append(
-        "Audit date: 2026-11-10 | Author: DATAFLOW Engineering Agent | Phase: 0\n"
-    )
+    lines.append("Audit date: 2026-11-10 | Author: DATAFLOW Engineering Agent | Phase: 0\n")
     lines.append("\n---\n")
     lines.append("## 1. Indicator Schema Overview\n")
     lines.append(
@@ -1118,9 +1116,7 @@ def build_indicator_dictionary():
         lines.append(f"- **Source Columns:** `{ind['source_columns']}`")
         lines.append(f"- **Source Values:** `{ind['source_values']}`")
         lines.append(f"- **Period Logic:** {ind['period_logic']}")
-        lines.append(
-            f"- **Propagation (`any_in_unique_allrows`):** {ind['propagation']}"
-        )
+        lines.append(f"- **Propagation (`any_in_unique_allrows`):** {ind['propagation']}")
         lines.append(f"- **Aggregation:** `{ind['aggregation']}`")
         lines.append(f"- **Notebook Reference:** {ind['notebook_ref']}")
         lines.append(f"- **Legacy Quirks:** {ind['legacy_quirks']}")

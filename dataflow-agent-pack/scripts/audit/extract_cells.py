@@ -5,14 +5,12 @@ import json
 from pathlib import Path
 
 NOTEBOOK_PATH = (
-    Path(__file__).resolve().parents[2]
-    / "reference"
-    / "OPTIMIZED_DATA_MGT.sanitized.ipynb"
+    Path(__file__).resolve().parents[2] / "reference" / "OPTIMIZED_DATA_MGT.sanitized.ipynb"
 )
 
 
 def main():
-    with open(NOTEBOOK_PATH, "r", encoding="utf-8") as f:
+    with open(NOTEBOOK_PATH, encoding="utf-8") as f:
         nb = json.load(f)
 
     cells = nb.get("cells", [])

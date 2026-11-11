@@ -7,10 +7,10 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parents[2]
 AUDIT_DIR = Path(__file__).resolve().parent
 
-with open(AUDIT_DIR / "cells_dump.json", "r", encoding="utf-8") as f:
+with open(AUDIT_DIR / "cells_dump.json", encoding="utf-8") as f:
     cells = json.load(f)
 
-with open(AUDIT_DIR / "cell_meta.json", "r", encoding="utf-8") as f:
+with open(AUDIT_DIR / "cell_meta.json", encoding="utf-8") as f:
     cell_meta = json.load(f)
 
 
@@ -20,9 +20,7 @@ def build_notebook_analysis():
     lines.append(
         "Complete audit of all 89 cells (58 code cells, 31 markdown cells) in `reference/OPTIMIZED_DATA_MGT.sanitized.ipynb`.\n"
     )
-    lines.append(
-        "Audit date: 2026-11-10 | Author: DATAFLOW Engineering Agent | Phase: 0\n"
-    )
+    lines.append("Audit date: 2026-11-10 | Author: DATAFLOW Engineering Agent | Phase: 0\n")
     lines.append("\n---\n")
     lines.append("## 1. Executive Summary & Inventory\n")
     lines.append("- **Total Cells:** 89")
@@ -48,18 +46,14 @@ def build_notebook_analysis():
     lines.append("    end")
     lines.append("")
     lines.append("    subgraph Cleaning [2. Cleaning Layer]")
-    lines.append(
-        '        FSW_KP --> C14["Cell 14: KPLHIV elementwise .map() capitalize & strip"]'
-    )
+    lines.append('        FSW_KP --> C14["Cell 14: KPLHIV elementwise .map() capitalize & strip"]')
     lines.append('        C14 --> KP_CLEAN["ConsolidatedKPLHIV (Cleaned)"]')
     lines.append('        FSW_REG --> C18["Cell 18: Filter sr_name.notna()"]')
     lines.append('        C18 --> C21["Cell 21: Uppercase demographic columns"]')
     lines.append('        C21 --> C43["Cell 43: Strip column names"]')
     lines.append('        C43 --> REG_CLEAN["ConsolidatedFSW (Cleaned)"]')
     lines.append('        KP_CLEAN --> C45["Cell 45: Drop s_n"]')
-    lines.append(
-        '        C45 --> C46["Cell 46: BUG - Overwrite KPLHIV with FSW if s_n exists!"]'
-    )
+    lines.append('        C45 --> C46["Cell 46: BUG - Overwrite KPLHIV with FSW if s_n exists!"]')
     lines.append("    end")
     lines.append("")
     lines.append("    subgraph DQA [3. Data Quality Checks]")
@@ -80,9 +74,7 @@ def build_notebook_analysis():
     lines.append("    subgraph Analytics [4. Analytics & Indicators]")
     lines.append('        KP_CLEAN --> C54["Cell 54: Standardize VL & suppression"]')
     lines.append('        C54 --> SUM_KP["summary_KPLHIV (county, sr_name, region)"]')
-    lines.append(
-        "        REG_CLEAN --> C57[\"Cell 57: Assign age_group (NaN -> 'Below 15')\"]"
-    )
+    lines.append("        REG_CLEAN --> C57[\"Cell 57: Assign age_group (NaN -> 'Below 15')\"]")
     lines.append(
         '        C57 --> C61["Cell 61: Compute 88 coverage indicators (any_in_unique_allrows)"]'
     )
@@ -102,18 +94,10 @@ def build_notebook_analysis():
     lines.append("    end")
     lines.append("")
     lines.append("    subgraph Reporting [6. Excel Exporting]")
-    lines.append(
-        "        FINAL_DF --> C75[\"Cell 75: Exporter Q1 non-PWID ('KP_Summary')\"]"
-    )
-    lines.append(
-        "        FINAL_DF --> C77[\"Cell 77: Exporter Q1 PWID ('PWID_Summary' + NSP)\"]"
-    )
-    lines.append(
-        "        FINAL_DF --> C80[\"Cell 80: Exporter Full non-PWID ('Summary')\"]"
-    )
-    lines.append(
-        "        FINAL_DF --> C82[\"Cell 82: Exporter Full PWID ('PWID_Summary' + NSP)\"]"
-    )
+    lines.append("        FINAL_DF --> C75[\"Cell 75: Exporter Q1 non-PWID ('KP_Summary')\"]")
+    lines.append("        FINAL_DF --> C77[\"Cell 77: Exporter Q1 PWID ('PWID_Summary' + NSP)\"]")
+    lines.append("        FINAL_DF --> C80[\"Cell 80: Exporter Full non-PWID ('Summary')\"]")
+    lines.append("        FINAL_DF --> C82[\"Cell 82: Exporter Full PWID ('PWID_Summary' + NSP)\"]")
     lines.append(
         "        IND_DF --> C84[\"Cell 84: Disaggregated Age/Sex Pivot Export (.fillna('F'))\"]"
     )
@@ -144,9 +128,7 @@ def build_notebook_analysis():
         title = meta["title"]
         purpose = meta["purpose"].replace("|", "\\|")
         inputs = ", ".join(f"`{i}`" for i in meta["inputs"]) if meta["inputs"] else "-"
-        outputs = (
-            ", ".join(f"`{o}`" for o in meta["outputs"]) if meta["outputs"] else "-"
-        )
+        outputs = ", ".join(f"`{o}`" for o in meta["outputs"]) if meta["outputs"] else "-"
         deps = ", ".join(f"Cell {d:02d}" for d in meta["deps"]) if meta["deps"] else "-"
         grp = meta["group"]
 
@@ -154,13 +136,9 @@ def build_notebook_analysis():
             f"| {idx:02d} | {type_badge} | {line_count} | {title} | {purpose} | {inputs} | {outputs} | {deps} | {grp} |"
         )
 
-    lines.append(
-        f"\n*Total audited code cells: {code_cell_count} (matches required 58).*\n"
-    )
+    lines.append(f"\n*Total audited code cells: {code_cell_count} (matches required 58).*\n")
     lines.append("\n---\n")
-    lines.append(
-        "## 4. Side-by-Side Diff and Structural Comparison of Cells 75, 77, 80, 82\n"
-    )
+    lines.append("## 4. Side-by-Side Diff and Structural Comparison of Cells 75, 77, 80, 82\n")
     lines.append(
         "The notebook contains four exporter functions across cells 75, 77, 80, and 82. They share ~90% of their logic and styling code, differing only in population features (NSP) and reporting period scope (Q1 vs Full Semester).\n"
     )
@@ -243,9 +221,7 @@ def build_notebook_analysis():
     lines.append("```python")
     lines.append("def export_summary_workbook(")
     lines.append("    summary_df: pd.DataFrame,")
-    lines.append(
-        "    population: str,             # 'FSW' | 'MSM' | 'PWID' | 'TG' | 'VP'"
-    )
+    lines.append("    population: str,             # 'FSW' | 'MSM' | 'PWID' | 'TG' | 'VP'")
     lines.append("    period_mode: str,            # 'Q1' | 'Q2' | 'SEM'")
     lines.append("    template_spec: ExcelTemplateSpec,")
     lines.append("    output_path: Path,")
@@ -264,9 +240,7 @@ def build_notebook_analysis():
         "    - Cascadia Code bold headers, Candara data rows, coral subheaders (FF7D81), green totals (6BD669)."
     )
     lines.append("    - TOTAL row with Excel SUM formulas merged across columns 1-3.")
-    lines.append(
-        "    - Automated sheet creation: 'Summary', 'Run Metadata', 'Cleaning Log'."
-    )
+    lines.append("    - Automated sheet creation: 'Summary', 'Run Metadata', 'Cleaning Log'.")
     lines.append('    """')
     lines.append("```\n")
     lines.append("### Key Benefits:\n")

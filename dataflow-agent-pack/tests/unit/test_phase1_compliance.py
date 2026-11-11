@@ -50,8 +50,8 @@ def test_zero_analytics_code_outside_oracle():
             "validation.py",
             "deduplication.py",
         }
-    else:
-        # Phase 4 allows periods, compat
+    elif cur in (4, 5):
+        # Phase 4/5 allows periods, compat
         allowed_core_files = {
             "config_models.py",
             "exceptions.py",
@@ -65,6 +65,24 @@ def test_zero_analytics_code_outside_oracle():
             "deduplication.py",
             "periods.py",
             "compat.py",
+        }
+    else:
+        # Phase 6+ allows runner, override
+        allowed_core_files = {
+            "config_models.py",
+            "exceptions.py",
+            "__init__.py",
+            "ingestion.py",
+            "cleaning.py",
+            "audit.py",
+            "inspect.py",
+            "pipeline.py",
+            "validation.py",
+            "deduplication.py",
+            "periods.py",
+            "compat.py",
+            "runner.py",
+            "override.py",
         }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files

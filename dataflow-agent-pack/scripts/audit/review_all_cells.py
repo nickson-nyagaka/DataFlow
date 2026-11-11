@@ -6,7 +6,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 for c in cells:

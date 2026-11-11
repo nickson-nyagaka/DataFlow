@@ -86,14 +86,10 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-11: `OLD_Cohort` and `NEW_Cohort` columns
-- **Status:** Open
-- **Why it matters:** Referenced in legacy column order but never computed.
+- **Status:** Resolved
+- **Decision:** Omit completely from summary sheets (never computed in legacy notebook; D-029).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `reporting/summary_builder.py`, Phase 5.
-- **Options:**
-  - A. Remove unless defined by Owner
-  - B. Compute based on enrolment date before vs during period
-- **Recommended default:** A. Remove unless defined
-- **Blocking:** No (Phase 5)
 
 ---
 
@@ -106,38 +102,26 @@ Status values: Open · Answered · Resolved · Withdrawn.
 ---
 
 ### OQ-13: NSP block header fill color
-- **Status:** Open
-- **Why it matters:** Styling of Excel summary package for PWID.
+- **Status:** Resolved
+- **Decision:** Keep legacy coral fill (#FF7D81) matching historical workbook styling (D-030).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `reporting/excel_exporter.py`, Phase 5.
-- **Options:**
-  - A. Keep coral fallback (`FF7D81`)
-  - B. Assign new hex color
-- **Recommended default:** A. Keep coral fallback (`FF7D81`)
-- **Blocking:** No (Phase 5)
 
 ---
 
 ### OQ-14: Identifier masking in report exports
-- **Status:** Open
-- **Why it matters:** Client privacy vs operational utility for Sub-Recipients.
+- **Status:** Resolved
+- **Decision:** Include full identifiers with confidentiality notice in Run Metadata (required for clinical partner follow-up) (D-031).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `reporting/package_builder.py`, `ui/exports.py`, Phase 5/6.
-- **Options:**
-  - A. UICs visible by default, UI prominent warning and optional masking checkbox
-  - B. Masked by default
-- **Recommended default:** A. UICs visible with warning and optional masking
-- **Blocking:** No (Phase 5/6)
 
 ---
 
 ### OQ-15: `total_nsp_SEM` in PWID full semester report
-- **Status:** Open
-- **Why it matters:** Export block lists `total_nsp_SEM` but notebook code omitted the sum.
+- **Status:** Resolved
+- **Decision:** Compute as sum of Q1 and Q2 commodity distributions (`total_nsp_q1 + total_nsp_q2`) (D-032).
+- **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `analytics/nsp.py`, `reporting/`, Phase 4/5.
-- **Options:**
-  - A. Compute as `total_nsp_Q1 + total_nsp_Q2`
-  - B. Omit column
-- **Recommended default:** A. Compute sum
-- **Blocking:** No (Phase 4/5)
 
 ---
 
@@ -202,3 +186,101 @@ Status values: Open · Answered · Resolved · Withdrawn.
 - **Decision:** Approve proposed classification (Critical: missing/duplicate UIC, HIVxART, HIVxPrEP, missing county/SR; Major: unscreened TB/STI, missing demographics, CCC Register not in KPLHIV; Minor: KPLHIV not in Register, unparseable dates). Set `block_on_critical: true` by default (D-019).
 - **Date decided:** 2026-11-10
 - **Affected file/function/column/phase:** `config/settings.yaml`, `core/validation.py`, Phase 3.
+
+---
+
+### OQ-24: Reporting Package Bundle Structure and Format
+- **Status:** Resolved
+- **Decision:** Emit both a master multi-tab Excel workbook and a modular ZIP archive containing separate workbooks (D-033).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/package_builder.py`, Phase 5.
+
+---
+
+### OQ-25: DQA Exceptions Sheet Layout When 0 Exceptions Detected
+- **Status:** Resolved
+- **Decision:** Retain standard 7-column table headers with an informational banner row ("No data quality exceptions detected. All records passed validation.") (D-034).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/package_builder.py`, `reporting/dqa_exporter.py`, Phase 5.
+
+---
+
+### OQ-26: Cleaned Data Identifier Masking Method in Export
+- **Status:** Resolved
+- **Decision:** Apply deterministic 8-character salted pseudo-hash `MASK-XXXX` when identifier masking is enabled (D-035).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/package_builder.py`, `reporting/cleaned_data_exporter.py`, Phase 5.
+
+---
+
+### OQ-27: Geography Casing Standard in Exported Summary Rows
+- **Status:** Resolved
+- **Decision:** Apply Title Case (`Nairobi`, `Sr Name`, `Western`) to county, sr_name, and region in summary tables (D-036).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/summary_builder.py`, `reporting/excel_exporter.py`, Phase 5.
+
+---
+
+### OQ-28: Sorting Order of Summary Data Rows
+- **Status:** Resolved
+- **Decision:** Apply hierarchical alphabetical sorting `County -> SR Name -> Region`, placing any `(MISSING)` geography rows at the bottom before the TOTAL row (D-037).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/summary_builder.py`, Phase 5.
+
+---
+
+### OQ-29: Summary Indicator Value Types & Formula Verification Precision
+- **Status:** Resolved
+- **Decision:** All 48 summary indicator columns are strictly non-negative integers; formula validator verifies exact integer equality (`diff == 0`) (D-038).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/workbook_validator.py`, Phase 5.
+
+---
+
+### OQ-30: Inclusion of Age × Sex Disaggregated Pivot Sheet (Cell 84)
+- **Status:** Resolved
+- **Decision:** Export the Age x Sex Disaggregated Pivot Sheet (Cell 84) as a separate standalone workbook inside the ZIP package, preserving legacy cell 84 disaggregated reporting (D-039).
+- **Date decided:** 2026-11-10
+- **Affected file/function/column/phase:** `reporting/package_builder.py`, `reporting/excel_exporter.py`, Phase 5.
+
+---
+
+### OQ-31: Multi-Page Navigation Architecture
+- **Status:** Resolved
+- **Decision:** Modern Streamlit `st.navigation` and `st.Page` API with sidebar page groupings (Workflow, Inspection, Governance) and icons (D-040).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `app.py`, `ui/`, Phase 6.
+
+---
+
+### OQ-32: User Workflow Progression & State Machine Gating
+- **Status:** Resolved
+- **Decision:** Guided state machine: Upload unlocks Processing; downstream pages (DQA, Analytics, Exports) unlock only after processing completes (D-041).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `app.py`, `ui/`, Phase 6.
+
+---
+
+### OQ-33: Critical DQA Exception Blocking Policy in UI
+- **Status:** Resolved
+- **Decision:** Block summary/ZIP exports while Critical exceptions exist (DQA workbook and Cleaning Log always downloadable); display banner per Critical rule; multi-field override requiring name and >= 20 char reason per rule tied to file hash and counts; mark overridden outputs PROVISIONAL; support advisory mode; fail closed; append-only audit log in `runtime/audit/` (D-042).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `ui/processing.py`, `ui/data_quality.py`, `ui/exports.py`, `core/override.py`, Phase 6.
+
+---
+
+### OQ-34: Export Download Presentation on Exports Page
+- **Status:** Resolved
+- **Decision:** Primary button for Master Excel Package (.xlsx) + secondary button for Modular ZIP (.zip) + individual file download buttons (D-043).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `ui/exports.py`, Phase 6.
+
+---
+
+### OQ-35: Session Reset and Temporary Storage Cleanup
+- **Status:** Resolved
+- **Decision:** 'New Session' action purges session state and deletes all files in `runtime/temporary/` (D-044).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `app.py`, `ui/`, Phase 6.
+
+

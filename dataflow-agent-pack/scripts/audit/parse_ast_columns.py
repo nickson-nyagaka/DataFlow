@@ -7,7 +7,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 agg_columns = {}
@@ -24,9 +24,7 @@ for c in cells:
     except (SyntaxError, ValueError):
         # Some cells might have IPython magic or syntax error
         # Clean lines starting with % or !
-        cleaned = "\n".join(
-            l for l in src.splitlines() if not l.strip().startswith(("%", "!"))
-        )
+        cleaned = "\n".join(l for l in src.splitlines() if not l.strip().startswith(("%", "!")))
         try:
             tree = ast.parse(cleaned)
         except (SyntaxError, ValueError) as e2:

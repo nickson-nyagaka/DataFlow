@@ -244,9 +244,7 @@ def main():
     out_path = BASE_DIR / "docs" / "EXCEL_OUTPUT_SPECIFICATION.md"
     with open(out_path, "w", encoding="utf-8") as f:
         f.write(content.strip() + "\n")
-    print(
-        f"Written docs/EXCEL_OUTPUT_SPECIFICATION.md ({len(content.splitlines())} lines)"
-    )
+    print(f"Written docs/EXCEL_OUTPUT_SPECIFICATION.md ({len(content.splitlines())} lines)")
 
 
 if __name__ == "__main__":

@@ -9,6 +9,7 @@ Usage:
 
 The original is never modified. Prints counts only, never cell contents.
 """
+
 from __future__ import annotations
 
 import json

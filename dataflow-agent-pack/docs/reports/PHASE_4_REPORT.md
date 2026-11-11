@@ -3,7 +3,7 @@
 Branch: `phase/4-analytical-engine` · Tag: `phase-4-submitted` · Date: 2026-11-10
 
 ## 1. Summary (max 10 lines)
-Phase 4 delivered the complete, modular analytical engine for DATAFLOW across all 5 Key Populations (FSW, PWID, MSM, TG, VP). The engine calculates all 48 PEPFAR/MoH indicators, demographic disaggregations, and KPLHIV metrics. In Stage A, the engine achieved 100% bit-for-bit parity with the legacy notebook oracle across all 59 final summary columns on synthetic data across all 5 populations. In Stage B, all legacy bug-compatibility switches were isolated in `core/compat.py` and `config/compat.yaml`, tested individually with logged diffs. All 147 unit and property tests pass. The full 80,000-row benchmark completed in 25.03s (<90s budget) with 297.5 MB peak RAM (<2.0 GB budget). Code coverage on `analytics/` is 93.1% and `core/periods.py` is 93.2%. Awaiting Owner review and approval to proceed to Phase 5.
+Phase 4 delivered the complete, modular analytical engine for DATAFLOW across all 5 Key Populations (FSW, PWID, MSM, TG, VP). The engine calculates all 48 GF indicators, demographic disaggregations, and KPLHIV metrics. In Stage A, the engine achieved 100% bit-for-bit parity with the legacy notebook oracle across all 59 final summary columns on synthetic data across all 5 populations. In Stage B, all legacy bug-compatibility switches were isolated in `core/compat.py` and `config/compat.yaml`, tested individually with logged diffs. All 147 unit and property tests pass. The full 80,000-row benchmark completed in 25.03s (<90s budget) with 297.5 MB peak RAM (<2.0 GB budget). Code coverage on `analytics/` is 93.1% and `core/periods.py` is 93.2%. Awaiting Owner review and approval to proceed to Phase 5.
 
 ## 2. Deliverables
 | Path | Purpose |

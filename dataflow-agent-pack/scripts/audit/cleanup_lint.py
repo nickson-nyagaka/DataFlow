@@ -14,9 +14,7 @@ vpc_path.write_text(content, encoding="utf-8")
 # Fix parse_ast_columns.py
 pac_path = AUDIT_DIR / "parse_ast_columns.py"
 content = pac_path.read_text(encoding="utf-8")
-content = content.replace(
-    "    except Exception:", "    except (SyntaxError, ValueError):"
-)
+content = content.replace("    except Exception:", "    except (SyntaxError, ValueError):")
 content = content.replace(
     "        except Exception as e2:", "        except (SyntaxError, ValueError) as e2:"
 )

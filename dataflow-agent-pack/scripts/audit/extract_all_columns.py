@@ -7,7 +7,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 
@@ -43,9 +43,7 @@ for idx in [54, 66, 75, 77, 80, 82, 84]:
                 all_columns[col_name] = {"source_cell": idx, "agg_expr": expr}
         else:
             # maybe dict syntax: .agg({'col': 'sum', ...})
-            dict_pairs = re.findall(
-                r'[\'"]([^\'"]+)[\'"]\s*:\s*[\'"]([^\'"]+)[\'"]', block
-            )
+            dict_pairs = re.findall(r'[\'"]([^\'"]+)[\'"]\s*:\s*[\'"]([^\'"]+)[\'"]', block)
             for col_name, func in dict_pairs:
                 all_columns[col_name] = {"source_cell": idx, "agg_expr": func}
 

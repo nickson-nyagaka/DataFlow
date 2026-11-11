@@ -6,7 +6,7 @@ from pathlib import Path
 
 DUMP_PATH = Path(__file__).resolve().parent / "cells_dump.json"
 
-with open(DUMP_PATH, "r", encoding="utf-8") as f:
+with open(DUMP_PATH, encoding="utf-8") as f:
     cells = json.load(f)
 
 
@@ -44,9 +44,7 @@ print_section("Cell 57 (L-05)", get_cell(57))
 c84 = get_cell(84)
 if c84:
     lines84 = [
-        line
-        for line in c84.splitlines()
-        if any(k in line for k in ["fillna", "age", "sex"])
+        line for line in c84.splitlines() if any(k in line for k in ["fillna", "age", "sex"])
     ]
     print_section("Cell 84 age/sex snippets (L-05, L-06)", "\n".join(lines84[:20]))
 
