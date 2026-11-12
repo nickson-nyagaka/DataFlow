@@ -316,43 +316,41 @@ def load_sheet_frame(
 ) -> tuple[pd.DataFrame, int, int]:
     """Loads a sheet into a DataFrame with string types (preserving leading zeros) and drops 100% blank rows."""
     ext = file_path.suffix.lower()
-    engine = (
-        "calamine"
-        if ext in [".xlsb", ".xls"]
-        else ("openpyxl" if ext in [".xlsx", ".xlsm"] else None)
-    )
-
-    engine_kwargs = {"read_only": True} if engine == "openpyxl" else None
     if ext == ".csv":
         raw_df = pd.read_csv(file_path, skiprows=skiprows, dtype=str)
     else:
+        # Fast Rust-based calamine engine dramatically accelerates large files (.xlsx, .xlsb, .xls)
         try:
             raw_df = pd.read_excel(
                 file_path,
                 sheet_name=sheet_name,
                 skiprows=skiprows,
-                engine=engine,
-                engine_kwargs=engine_kwargs,
+                engine="calamine",
                 dtype=str,
             )
         except Exception:
-            if engine == "openpyxl":
-                raw_df = pd.read_excel(
-                    file_path,
-                    sheet_name=sheet_name,
-                    skiprows=skiprows,
-                    engine="calamine",
-                    dtype=str,
-                )
-            else:
-                raise
+            # Resilient fallback to openpyxl for xlsx/xlsm
+            engine_kwargs = {"read_only": True} if ext in [".xlsx", ".xlsm"] else None
+            raw_df = pd.read_excel(
+                file_path,
+                sheet_name=sheet_name,
+                skiprows=skiprows,
+                engine="openpyxl" if ext in [".xlsx", ".xlsm"] else None,
+                engine_kwargs=engine_kwargs,
+                dtype=str,
+            )
 
     rows_in = len(raw_df)
 
-    # Drop rows that are completely empty / whitespace (D-010)
-    is_empty_row = raw_df.isna().all(axis=1) | raw_df.map(
-        lambda x: str(x).strip() == "" if pd.notna(x) else True
-    ).all(axis=1)
+    # Fast vectorized blank row detection (D-010) with column-wise early exit
+    non_empty_mask = pd.Series(False, index=raw_df.index)
+    for col in raw_df.columns:
+        s = raw_df[col]
+        has_content = s.notna() & (s.astype(str).str.strip() != "")
+        non_empty_mask |= has_content
+        if non_empty_mask.all():
+            break
+    is_empty_row = ~non_empty_mask
     cleaned_df = raw_df[~is_empty_row].copy()
     dropped_empty_rows = int(is_empty_row.sum())
 

@@ -60,31 +60,34 @@ def render_exports() -> None:
 
     st.divider()
 
-    # 2. Check Critical DQA Gating (Decision D-042)
+    # 2. Check DQA Status and Advisory Notices
     is_blocked, blocking_reasons, is_prov = override_mgr.check_export_status(
         dqa_results=dqa,
         file_hash=file_hash,
         block_on_critical=block_on_crit,
     )
 
-    if is_blocked:
-        st.error(
-            f"🚫 **Summary & ZIP Exports Blocked by Critical DQA Policy (D-042)**\n\n"
-            f"{blocking_reasons[0]}\n\n"
-            "Final summary workbooks and modular ZIP packages cannot be downloaded until source data is corrected, "
-            "or an authorized supervisor logs an override on the **Data Quality** page.",
-            icon="🚫",
-        )
-        st.info(
-            "💡 **Facility Remediation Access:** You may still download the **DQA Exceptions Workbook** "
-            "and **Cleaning Log** below to identify and correct erroneous records.",
+    if dqa and dqa.has_critical:
+        crit_n = dqa.severity_counts.get("Critical", 0)
+        st.warning(
+            f"⚠️ **DQA Advisory Notice ({crit_n:,} Critical Exception{'s' if crit_n != 1 else ''} Detected):**\n\n"
+            f"{blocking_reasons[0] if blocking_reasons else 'Critical data quality exceptions exist in this cohort.'}\n\n"
+            "**All export packages remain fully available for download below.** "
+            "Please download the DQA Exceptions workbook to perform facility-level data reconciliation.",
+            icon="⚠️",
         )
     elif is_prov:
-        st.warning(
-            "⚠️ **PROVISIONAL Report Output:**\n\n"
-            "This package contains Critical DQA exceptions that were authorized via supervisory override. "
+        st.info(
+            "ℹ️ **PROVISIONAL Report Output:**\n\n"
+            "This package contains Critical DQA exceptions under advisory mode or supervisory authorization. "
             "All exported sheets and metadata are stamped with `PROVISIONAL`.",
-            icon="⚠️",
+            icon="ℹ️",
+        )
+    elif dqa and dqa.total_exceptions > 0:
+        st.info(
+            f"ℹ️ **Quality Audit Notice:** {dqa.total_exceptions:,} DQA exception(s) detected. "
+            "All reporting packages are validated and ready for download.",
+            icon="ℹ️",
         )
     else:
         st.success(
@@ -92,28 +95,30 @@ def render_exports() -> None:
             icon="✅",
         )
 
-    # 3. Download Options (Decision D-043)
+    # 3. Download Options
     st.subheader("1. Primary Export Packages")
 
     master_path = result.package_paths.get("master_workbook")
     zip_path = result.package_paths.get("zip_package")
+    master_bytes = None
+    zip_bytes = None
 
     col_master, col_zip = st.columns(2)
 
     with col_master:
-        if master_path and master_path.exists():
+        if master_path and Path(master_path).exists():
             with open(master_path, "rb") as f:
                 master_bytes = f.read()
 
             st.download_button(
                 label="📘 Download Master Excel Package (.xlsx)",
                 data=master_bytes,
-                file_name=master_path.name,
+                file_name=Path(master_path).name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                disabled=is_blocked,
+                disabled=False,
                 type="primary",
                 use_container_width=True,
-                help="Consolidated all-in-one reporting package containing Summary, Cleaned Cohort, Cleaned KPLHIV, DQA Exceptions, Run Metadata, and Cleaning Log.",
+                help="Consolidated all-in-one reporting package containing Summary, Cleaned Cohort, Cleaned KPLHIV, DQA Exceptions, and KPI Disaggregations.",
             )
         else:
             st.button(
@@ -121,16 +126,16 @@ def render_exports() -> None:
             )
 
     with col_zip:
-        if zip_path and zip_path.exists():
+        if zip_path and Path(zip_path).exists():
             with open(zip_path, "rb") as f:
                 zip_bytes = f.read()
 
             st.download_button(
                 label="🗜️ Download Modular ZIP Archive (.zip)",
                 data=zip_bytes,
-                file_name=zip_path.name,
+                file_name=Path(zip_path).name,
                 mime="application/zip",
-                disabled=is_blocked,
+                disabled=False,
                 type="secondary",
                 use_container_width=True,
                 help="ZIP archive containing individual standalone workbooks for each reporting module.",
@@ -140,67 +145,89 @@ def render_exports() -> None:
 
     st.divider()
 
-    # 4. Individual Component Downloads (Always available for DQA / Remediation)
+    # 4. Individual Component Downloads (Always available for DQA / Remediation / Reporting)
     st.subheader("2. Individual Component Downloads")
     st.caption("Individual workbooks and audit trails for targeted facility review.")
 
     c1, c2 = st.columns(2)
     c3, c4 = st.columns(2)
 
-    # Cleaned Register
+    # Summary Report Workbook
+    summary_path = result.package_paths.get("summary_workbook")
+    disagg_path = result.package_paths.get("disaggregation_workbook")
+    cleaned_path = result.package_paths.get("cleaned_data_workbook")
+    dqa_path = result.package_paths.get("dqa_workbook")
+
     with c1:
-        st.markdown("**Cleaned Cohort Register**")
-        if not is_blocked and master_path and master_path.exists():
+        st.markdown("**Service Summary Report**")
+        if summary_path and Path(summary_path).exists():
+            with open(summary_path, "rb") as f:
+                s_bytes = f.read()
             st.download_button(
-                label="Download Cleaned Register (.xlsx)",
-                data=master_bytes,
-                file_name=f"Cleaned_Register_{result.population}_{result.period_mode}.xlsx",
+                label="Download Service Summary (.xlsx) 📥",
+                data=s_bytes,
+                file_name=Path(summary_path).name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="btn_clean_reg",
+                key="btn_summary_wb",
+                use_container_width=True,
+            )
+        elif master_bytes:
+            st.download_button(
+                label="Download Summary (from Master) 📥",
+                data=master_bytes,
+                file_name=f"Summary_Report_{result.population}_{result.period_mode}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_summary_master",
                 use_container_width=True,
             )
         else:
-            st.button(
-                "Cleaned Register (Gated)",
-                disabled=True,
-                key="btn_clean_reg_dis",
-                use_container_width=True,
-            )
+            st.button("Summary Unavailable", disabled=True, key="btn_summary_dis", use_container_width=True)
 
-    # Cleaned KPLHIV
     with c2:
-        st.markdown("**Cleaned KPLHIV Tracking**")
-        if not is_blocked and master_path and master_path.exists():
+        st.markdown("**Age & Sex Disaggregation Report**")
+        if disagg_path and Path(disagg_path).exists():
+            with open(disagg_path, "rb") as f:
+                d_bytes = f.read()
             st.download_button(
-                label="Download Cleaned KPLHIV (.xlsx)",
-                data=master_bytes,
-                file_name=f"Cleaned_KPLHIV_{result.population}_{result.period_mode}.xlsx",
+                label="Download Disaggregations (.xlsx) 📥",
+                data=d_bytes,
+                file_name=Path(disagg_path).name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                key="btn_clean_kp",
+                key="btn_disagg_wb",
+                use_container_width=True,
+            )
+        elif master_bytes:
+            st.download_button(
+                label="Download Disaggregations (from Master) 📥",
+                data=master_bytes,
+                file_name=f"Disaggregations_{result.population}_{result.period_mode}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_disagg_master",
                 use_container_width=True,
             )
         else:
-            st.button(
-                "Cleaned KPLHIV (Gated)",
-                disabled=True,
-                key="btn_clean_kp_dis",
-                use_container_width=True,
-            )
+            st.button("Disaggregations Unavailable", disabled=True, key="btn_disagg_dis", use_container_width=True)
 
-    # DQA Exceptions (ALWAYS AVAILABLE PER D-042)
     with c3:
-        st.markdown("**DQA Exceptions Workbook** *(Always Available)*")
-        dqa_file = (
-            Path("runtime/temporary")
-            / f"dqa_exceptions_{result.population}_{result.period_mode}.xlsx"
-        )
-        if dqa_file.exists():
-            with open(dqa_file, "rb") as f:
+        st.markdown("**DQA Exceptions Workbook**")
+        dqa_file_candidate = None
+        if dqa_path and Path(dqa_path).exists():
+            dqa_file_candidate = Path(dqa_path)
+        else:
+            tmp_dqa = (
+                Path("runtime/temporary")
+                / f"dqa_exceptions_{result.population}_{result.period_mode}.xlsx"
+            )
+            if tmp_dqa.exists():
+                dqa_file_candidate = tmp_dqa
+
+        if dqa_file_candidate and dqa_file_candidate.exists():
+            with open(dqa_file_candidate, "rb") as f:
                 dqa_bytes = f.read()
             st.download_button(
                 label="Download DQA Exceptions (.xlsx) 📥",
                 data=dqa_bytes,
-                file_name=f"DQA_Exceptions_{result.population}_{result.period_mode}.xlsx",
+                file_name=dqa_file_candidate.name,
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 key="btn_dqa_always",
                 use_container_width=True,
@@ -213,9 +240,8 @@ def render_exports() -> None:
                 use_container_width=True,
             )
 
-    # Audit & Reconciliation Log
     with c4:
-        st.markdown("**Audit & Reconciliation Trail** *(Always Available)*")
+        st.markdown("**Audit & Reconciliation Trail**")
         audit_file = Path("runtime/audit/override_log.jsonl")
         audit_content = audit_file.read_bytes() if audit_file.exists() else b"{}"
         st.download_button(
@@ -226,6 +252,45 @@ def render_exports() -> None:
             key="btn_audit_always",
             use_container_width=True,
         )
+
+    # Row for Cleaned Data
+    st.markdown("---")
+    st.markdown("**Cleaned Microdata & Enriched Registers**")
+    cc1, cc2 = st.columns(2)
+    with cc1:
+        if cleaned_path and Path(cleaned_path).exists():
+            with open(cleaned_path, "rb") as f:
+                c_bytes = f.read()
+            st.download_button(
+                label="Download Cleaned Register & KPLHIV (.xlsx) 📥",
+                data=c_bytes,
+                file_name=Path(cleaned_path).name,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_cleaned_data_wb",
+                use_container_width=True,
+            )
+        elif master_bytes:
+            st.download_button(
+                label="Download Cleaned Register (from Master) 📥",
+                data=master_bytes,
+                file_name=f"Cleaned_Register_{result.population}_{result.period_mode}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_clean_reg_master",
+                use_container_width=True,
+            )
+        else:
+            st.button("Cleaned Data Unavailable", disabled=True, key="btn_clean_dis", use_container_width=True)
+
+    with cc2:
+        if master_bytes:
+            st.download_button(
+                label="Download Cleaned KPLHIV (from Master) 📥",
+                data=master_bytes,
+                file_name=f"Cleaned_KPLHIV_{result.population}_{result.period_mode}.xlsx",
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                key="btn_clean_kp_master",
+                use_container_width=True,
+            )
 
 
 render_exports()

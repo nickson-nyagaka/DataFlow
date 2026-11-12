@@ -64,30 +64,35 @@ def parse_date_series(series: pd.Series) -> pd.Series:
     s = series.astype(str).str.strip()
     mask_empty = series.isna() | s.str.lower().isin(["nan", "none", ""])
 
-    # 1. Try ISO date parsing first for speed (YYYY-MM-DD)
-    is_iso = s.str.match(r"^\d{4}-\d{2}-\d{2}$", na=False)
-    dt_iso = pd.to_datetime(s[is_iso], format="%Y-%m-%d", errors="coerce")
+    # 1. Try ISO date parsing first for speed (YYYY-MM-DD or YYYY-MM-DD HH:MM:SS)
+    is_iso = s.str.match(r"^\d{4}-\d{2}-\d{2}(?:[ T].*)?$", na=False)
+    dt_iso = pd.to_datetime(s[is_iso].str.slice(0, 10), format="%Y-%m-%d", errors="coerce")
 
-    # 2. For remaining non-ISO non-empty values, try dayfirst=True
+    # 2. For remaining non-ISO non-empty values
     non_iso = ~is_iso & ~mask_empty
-    dt_dayfirst = pd.to_datetime(s[non_iso], dayfirst=True, errors="coerce")
+    s_non_iso = s[non_iso]
 
-    # 3. For any remaining values that failed, check if numeric serial (e.g. 45123)
-    failed = dt_dayfirst.isna()
-    if failed.any():
-        failed_s = s[non_iso][failed]
-        is_num = failed_s.str.replace(r"\.0+$", "", regex=True).str.isdigit()
-        if is_num.any():
-            serials = pd.to_numeric(failed_s[is_num], errors="coerce")
-            dt_serials = pd.to_datetime(serials, unit="D", origin="1899-12-30", errors="coerce")
-            dt_dayfirst = dt_dayfirst.combine_first(dt_serials)
+    # Check numeric serials (e.g. 45123 or 37422)
+    is_num = s_non_iso.str.replace(r"\.0+$", "", regex=True).str.isdigit()
+    dt_serials = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[ns]")
+    if is_num.any():
+        serials = pd.to_numeric(s_non_iso[is_num].str.replace(r"\.0+$", "", regex=True), errors="coerce")
+        dt_serials.update(pd.to_datetime(serials, unit="D", origin="1899-12-30", errors="coerce"))
 
-    # Combine ISO and dayfirst results
-    combined_dt = pd.Series(pd.NaT, index=series.index)
+    # For remaining non-numeric non-ISO strings, try dayfirst=True
+    non_num = ~is_num
+    dt_dayfirst = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[ns]")
+    if non_num.any():
+        dt_dayfirst.update(pd.to_datetime(s_non_iso[non_num], dayfirst=True, errors="coerce"))
+
+    combined_non_iso = dt_serials.combine_first(dt_dayfirst)
+
+    # Combine ISO and non-ISO results
+    combined_dt = pd.Series(pd.NaT, index=series.index, dtype="datetime64[ns]")
     if is_iso.any():
         combined_dt.update(dt_iso)
     if non_iso.any():
-        combined_dt.update(dt_dayfirst)
+        combined_dt.update(combined_non_iso)
 
     result_str = combined_dt.dt.strftime("%Y-%m-%d")
     return result_str.mask(mask_empty | combined_dt.isna(), np.nan)

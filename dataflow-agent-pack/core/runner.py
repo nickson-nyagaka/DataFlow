@@ -18,6 +18,8 @@ from typing import Any
 
 import pandas as pd
 
+from analytics.demographics import compute_kpi_demographic_summary
+from analytics.display_summary import compute_display_analytics
 from analytics.engine import run_analytics
 from analytics.kplhiv import compute_kplhiv_summary, process_kplhiv_frame
 from core.cleaning import clean_kplhiv_frame, clean_register_frame
@@ -193,6 +195,11 @@ def run_full_pipeline(
             population=population,
             period_mode=period_mode,
         )
+        # Compute KPI age x sex disaggregation summary
+        kpi_summary_df = compute_kpi_demographic_summary(
+            reg_analyzed,
+            period_mode=period_mode,
+        )
         stage_timings["analytics"] = round(time.perf_counter() - t0, 3)
 
         # Stage 5: Reporting Package Generation
@@ -218,52 +225,16 @@ def run_full_pipeline(
         major_count = dqa_results.severity_counts.get("Major", 0)
         minor_count = dqa_results.severity_counts.get("Minor", 0)
 
-        # Summary indicator sums for quick chart display
-        def _get_sum(col: str) -> int:
-            if col in summary_df.columns:
-                return int(pd.to_numeric(summary_df[col], errors="coerce").fillna(0).sum())
-            return 0
-
-        display_analytics = {
-            "hts_cascade": {
-                "Tested": _get_sum("hts_tst_SEM") or _get_sum("hts_tst_q1") or _get_sum("hts_tst"),
-                "Negative": _get_sum("hts_tst_neg_SEM") or _get_sum("hts_tst_neg"),
-                "Positive": _get_sum("hts_tst_pos_SEM") or _get_sum("hts_tst_pos"),
-                "Linked": _get_sum("hts_linked_SEM") or _get_sum("hts_linked"),
-            },
-            "prep_cascade": {
-                "Screened": _get_sum("prep_screened_SEM") or _get_sum("prep_screened"),
-                "Eligible": _get_sum("prep_eligible_SEM") or _get_sum("prep_eligible"),
-                "Initiated": _get_sum("prep_new_SEM") or _get_sum("prep_new"),
-                "Refills": _get_sum("prep_refill_SEM") or _get_sum("prep_refill"),
-                "Discontinued": _get_sum("prep_discont_SEM") or _get_sum("prep_discont"),
-            },
-            "art_cascade": {
-                "Active KPLHIV": active_kplhiv,
-                "On ART": _get_sum("art_prep_SEM")
-                or _get_sum("Positive_art")
-                or _get_sum("art_prep"),
-                "Viral Load Done": _get_sum("vl_done_SEM") or _get_sum("vl_done"),
-                "Suppressed": _get_sum("vl_suppressed_SEM") or _get_sum("vl_suppressed"),
-            },
-            "commodities": {
-                "Male Condoms": _get_sum("condom_SEM")
-                or _get_sum("condom_q1")
-                or _get_sum("condom"),
-                "Female Condoms": _get_sum("female_condom_SEM") or _get_sum("female_condom"),
-                "Lubricants": _get_sum("lubes_SEM") or _get_sum("lubes_q1") or _get_sum("lubes"),
-                "Needles & Syringes": _get_sum("total_nsp_SEM")
-                or _get_sum("total_nsp_q1")
-                or _get_sum("nsp_SEM"),
-            },
-            "geography_breakdown": (
-                summary_df[["County", "SR Name", "Region"]]
-                .drop_duplicates()
-                .to_dict(orient="records")
-                if {"County", "SR Name", "Region"}.issubset(summary_df.columns)
-                else []
-            ),
-        }
+        display_analytics = compute_display_analytics(
+            summary_df=summary_df,
+            reg_analyzed=reg_analyzed,
+            kp_analyzed=kp_analyzed,
+            population=population,
+            period_mode=period_mode,
+            total_cohort=total_cohort,
+            active_kplhiv=active_kplhiv,
+            kpi_summary_df=kpi_summary_df,
+        )
 
         ts = datetime.now(UTC).isoformat()
         result = PipelineResult(
@@ -307,9 +278,15 @@ def run_full_pipeline(
 
 
 def write_run_metadata(result: PipelineResult, path: Path | str = RUN_METADATA_PATH) -> None:
-    """Writes run metadata JSON containing only aggregate statistics (zero client identifiers)."""
+    """Writes run metadata JSON containing aggregate statistics and display cascades (zero client identifiers)."""
     p = Path(path)
     p.parent.mkdir(parents=True, exist_ok=True)
+    serializable_disp = {}
+    if result.display_analytics:
+        for k, v in result.display_analytics.items():
+            if k != "kpi_summary_df" and not isinstance(v, pd.DataFrame):
+                serializable_disp[k] = v
+
     meta = {
         "timestamp": result.timestamp,
         "input_file_name": result.input_file_name,
@@ -325,6 +302,7 @@ def write_run_metadata(result: PipelineResult, path: Path | str = RUN_METADATA_P
         "minor_dqa_count": result.minor_dqa_count,
         "duration_seconds": result.duration_seconds,
         "stage_timings": result.stage_timings,
+        "display_analytics": serializable_disp,
         "status": "SUCCESS",
     }
     with open(p, "w", encoding="utf-8") as f:

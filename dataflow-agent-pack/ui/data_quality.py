@@ -60,21 +60,19 @@ def render_data_quality() -> None:
     )
 
     if critical_counts:
-        if is_blocked:
-            st.error(
-                f"🚨 **Report Export Blocked by Critical Exceptions!**\n\n"
-                f"{blocking_reasons[0]}\n\n"
-                "Summary and ZIP exports are disabled. Correct the source register and re-upload, "
-                "or authorize a supervisory override below.",
-                icon="🚨",
-            )
-        else:
-            st.warning(
-                "⚠️ **Critical Exceptions Overridden (PROVISIONAL Mode):**\n\n"
-                "All Critical exceptions have been authorized with supervisory justification. "
-                "Exported workbooks are unlocked and will be stamped `PROVISIONAL`.",
-                icon="⚠️",
-            )
+        crit_n = dqa.severity_counts.get("Critical", 0)
+        st.warning(
+            f"⚠️ **Critical DQA Exceptions Identified ({crit_n:,} records):**\n\n"
+            f"{blocking_reasons[0] if blocking_reasons else 'Critical exceptions were detected in the source cohort.'}\n\n"
+            "**All export reporting workbooks and packages remain fully accessible for download on the Export Reports page.** "
+            "Supervisors may log a formal clinical review below if required.",
+            icon="⚠️",
+        )
+    elif is_prov:
+        st.info(
+            "ℹ️ **PROVISIONAL Mode Active:** Critical exceptions acknowledged. Exported workbooks are stamped `PROVISIONAL`.",
+            icon="ℹ️",
+        )
 
     elif dqa.total_exceptions == 0:
         st.success(

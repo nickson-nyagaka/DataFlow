@@ -40,7 +40,10 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
             res[col] = 0
         return res
 
-    active_prep = ["Initiated", "Restart", "Switched", "Refill"]
+    active_prep = ["Initiated", "Restart", "Switched", "Refill", "initiated", "restart", "switched", "refill"]
+    refill_variants = ["Refill", "refill"]
+    initiate_variants = ["Initiated", "initiated"]
+    disc_variants = ["Discontinued", "discontinued"]
 
     # Q1
     res["prep_q1"] = np.where(
@@ -49,17 +52,17 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
         0,
     )
     res["prep_refill_q1"] = np.where(
-        any_in_unique_allrows(res, q1_cols, ["Refill"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q1_cols, refill_variants, case_insensitive=case_insens),
         1,
         0,
     )
     res["prep_initiate_q1"] = np.where(
-        any_in_unique_allrows(res, q1_cols, ["Initiated"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q1_cols, initiate_variants, case_insensitive=case_insens),
         1,
         0,
     )
     res["prep_disc_q1"] = np.where(
-        any_in_unique_allrows(res, q1_cols, ["Discontinued"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q1_cols, disc_variants, case_insensitive=case_insens),
         1,
         0,
     )
@@ -71,17 +74,17 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
         0,
     )
     res["prep_refill_q2"] = np.where(
-        any_in_unique_allrows(res, q2_cols, ["Refill"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q2_cols, refill_variants, case_insensitive=case_insens),
         1,
         0,
     )
     res["prep_initiate_q2"] = np.where(
-        any_in_unique_allrows(res, q2_cols, ["Initiated"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q2_cols, initiate_variants, case_insensitive=case_insens),
         1,
         0,
     )
     res["prep_disc_q2"] = np.where(
-        any_in_unique_allrows(res, q2_cols, ["Discontinued"], case_insensitive=case_insens),
+        any_in_unique_allrows(res, q2_cols, disc_variants, case_insensitive=case_insens),
         1,
         0,
     )

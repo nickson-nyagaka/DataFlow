@@ -1,7 +1,7 @@
 app_name: "DATAFLOW"
 version: "0.1.0"
 max_upload_size_mb: 200
-block_on_critical_dqa: true
+block_on_critical_dqa: false
 mask_identifiers_by_default: false
 temp_dir: "runtime/temporary"
 export_dir: "runtime/exports"

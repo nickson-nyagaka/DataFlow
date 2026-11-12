@@ -83,11 +83,12 @@ def test_full_pipeline_population_period_matrix(population: str, period_mode: st
     )
     assert val_res.is_valid is True, f"Validation errors: {val_res.issues}"
 
-    # Verify master workbook contains expected core sheets
+    # Verify master workbook contains expected core sheets (Run Metadata & Cleaning Log removed)
     wb_master = openpyxl.load_workbook(master_path, data_only=True)
     ws_sum = wb_master.worksheets[0]
     assert any(k in ws_sum.title for k in ("Summary", "PWID"))
-    assert "Run Metadata" in wb_master.sheetnames
+    assert "Run Metadata" not in wb_master.sheetnames
+    assert "Cleaning Log" not in wb_master.sheetnames
     assert "DQA Exceptions" in wb_master.sheetnames
     assert "Cleaned Register" in wb_master.sheetnames
 

@@ -81,7 +81,12 @@ def compute_art_indicators(df: pd.DataFrame, compat: CompatSwitches | None = Non
     if compat and compat.legacy_capitalize_vocabulary:
         known_pos_variants = ["Known positive"]
     else:
-        known_pos_variants = ["Known positive", "Known Positive"]
+        known_pos_variants = [
+            "Known positive",
+            "Known Positive",
+            "known positive",
+            "KNOWN POSITIVE",
+        ]
 
     if hiv_q1_cols or hiv_q2_cols:
         res["plhiv"] = np.where(

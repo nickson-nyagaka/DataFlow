@@ -141,9 +141,9 @@ def render_upload() -> None:
         col_crit, col_mask = st.columns(2)
         with col_crit:
             block_on_crit = st.checkbox(
-                "Block report exports on Critical DQA exceptions",
-                value=st.session_state.get("block_on_critical", True),
-                help="Enforces Decision D-042: prevents export of analytical summaries if Critical data errors exist.",
+                "Strict DQA Gating (Flag Critical exceptions as PROVISIONAL)",
+                value=st.session_state.get("block_on_critical", False),
+                help="When enabled, requires supervisory override before final approval. All exports remain downloadable with advisory notice.",
             )
             st.session_state["block_on_critical"] = block_on_crit
 

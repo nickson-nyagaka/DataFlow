@@ -215,6 +215,8 @@ def build_reporting_package(
     """
     out_dir = Path(output_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
+    pop_str = population.upper()
+    period_str = period_mode.upper()
     manager = get_template_manager()
     layout = manager.get_layout_for(population, period_mode)
     sheet_name = manager.get_sheet_name_for(population, period_mode)
@@ -263,25 +265,13 @@ def build_reporting_package(
         config=manager,
     )
 
-    # Tab 5: Run Metadata
-    export_run_metadata_sheet(
+    # Tab 5: KPI Age x Sex Disaggregation (notebook Cell 84)
+    kpi_tab_name = "KPI" if pop_str == "TG" else "KPI_Disaggregation"
+    export_age_sex_disaggregation_sheet(
         master_wb,
-        "Run Metadata",
-        population=population,
-        period_mode=period_mode,
-        input_file_hash=input_file_hash,
-        config_hash=config_hash,
-        mask_identifiers=mask_identifiers,
-        provisional_indicators=provisional_indicators,
-        compat_state=compat_state,
-        config=manager,
-    )
-
-    # Tab 6: Cleaning Log
-    export_cleaning_log_sheet(
-        master_wb,
-        "Cleaning Log",
-        cleaning_audit_df=cleaning_audit_df,
+        kpi_tab_name,
+        cleaned_register,
+        period_mode=period_str,
         config=manager,
     )
 
@@ -341,8 +331,9 @@ def build_reporting_package(
         disagg_wb = openpyxl.Workbook()
         if disagg_wb.active is not None:
             disagg_wb.remove(disagg_wb.active)
+        disagg_sheet_name = "KPI" if pop_str == "TG" else "Age_Sex_Disaggregation"
         export_age_sex_disaggregation_sheet(
-            disagg_wb, "Age_Sex_Disaggregation", cleaned_register, config=manager
+            disagg_wb, disagg_sheet_name, cleaned_register, period_mode=period_str, config=manager
         )
         disagg_wb.save(disagg_path)
         disagg_wb.close()

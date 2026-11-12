@@ -463,6 +463,18 @@ def test_analytics_page_render_processed_state(tmp_path: Path):
     assert any("Clients Tested" in m.label for m in at.metric)
 
 
+def test_dashboard_page_render_processed_state(tmp_path: Path):
+    """Runs ui/dashboard.py through AppTest with populated PROCESSED session state and charts."""
+    res = _build_test_pipeline_result(tmp_path)
+    at = AppTest.from_file(ui_path("dashboard.py"), default_timeout=20)
+    at.session_state["stage"] = "PROCESSED"
+    at.session_state["pipeline_result"] = res
+    at.run()
+    assert not at.exception
+    assert any("Cohort Performance Dashboard" in t.value for t in at.title)
+    assert any("Total Cohort Clients" in m.label for m in at.metric)
+
+
 def test_exports_page_render_processed_state(tmp_path: Path):
     """Runs ui/exports.py through AppTest with populated PROCESSED session state."""
     res = _build_test_pipeline_result(tmp_path)
@@ -475,6 +487,39 @@ def test_exports_page_render_processed_state(tmp_path: Path):
     assert not at.exception
     assert any("Export Reporting Packages" in t.value for t in at.title)
     assert any("Master Excel Package" in b.label for b in at.download_button)
+
+
+def test_exports_page_allows_download_when_dqa_exceptions_exist(tmp_path: Path):
+    """Verifies that DQA exceptions do not prohibit downloading of export packages."""
+    res = _build_test_pipeline_result(tmp_path)
+    # Simulate Critical DQA exceptions present
+    exc_df = pd.DataFrame(
+        [{"rule_id": "DQA_HIV_NEG_ON_ART", "severity": "Critical", "uic": "UIC-001"}]
+    )
+    res.dqa_results = DQAResults(
+        exceptions_df=exc_df,
+        summary_df=pd.DataFrame(),
+        rule_counts={"DQA_HIV_NEG_ON_ART": 1},
+        severity_counts={"Critical": 1},
+        has_critical=True,
+        total_exceptions=1,
+    )
+    at = AppTest.from_file(ui_path("exports.py"), default_timeout=20)
+    at.session_state["stage"] = "PROCESSED"
+    at.session_state["pipeline_result"] = res
+    at.session_state["block_on_critical"] = True
+    at.session_state["mask_identifiers"] = False
+    at.run()
+    assert not at.exception
+
+    # Ensure download buttons are present and not disabled
+    master_btns = [b for b in at.download_button if "Master Excel Package" in b.label]
+    assert len(master_btns) == 1
+    assert not master_btns[0].disabled
+
+    zip_btns = [b for b in at.download_button if "Modular ZIP Archive" in b.label]
+    assert len(zip_btns) == 1
+    assert not zip_btns[0].disabled
 
 
 def test_configuration_page_render():

@@ -14,6 +14,7 @@ from reporting.template_manager import (
     LayoutSpec,
     get_template_manager,
 )
+from analytics.demographics import compute_kpi_demographic_summary
 
 
 def _apply_border_to_range(
@@ -228,11 +229,12 @@ def export_age_sex_disaggregation_sheet(
     workbook: openpyxl.Workbook,
     sheet_name: str,
     register_df: pd.DataFrame,
+    period_mode: str = "Q1",
     config: ExcelTemplateConfig | None = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
     """
-    Renders the Age x Sex Disaggregated Pivot Sheet (notebook Cell 84).
-    Excludes records with missing sex with a prominent footnote (D-022).
+    Renders the 24-column KPI Indicators by Age and Sex table (notebook Cell 84).
+    Disaggregates DEFINED PACKAGE, HTS, and PREP across 6 age-sex groups and totals.
     """
     if config is None:
         config = get_template_manager()
@@ -242,82 +244,119 @@ def export_age_sex_disaggregation_sheet(
     else:
         ws = workbook.create_sheet(title=sheet_name)
 
-    header_font = Font(name=config.fonts.header, size=config.fonts.size, bold=True)
+    # Compute KPI Demographic DataFrame
+    kpi_df = compute_kpi_demographic_summary(register_df, period_mode=period_mode)
+
+    header_font_white = Font(name=config.fonts.header, size=config.fonts.size, bold=True, color="FFFFFF")
+    header_font_black = Font(name=config.fonts.header, size=config.fonts.size, bold=True, color="000000")
     body_font = Font(name=config.fonts.body, size=config.fonts.size, bold=False)
+    total_font = Font(name=config.fonts.body, size=config.fonts.size, bold=True)
+
+    fill_demo = PatternFill(start_color="00B050", end_color="00B050", fill_type="solid")
+    fill_def = PatternFill(start_color="0070C0", end_color="0070C0", fill_type="solid")
+    fill_hts = PatternFill(start_color="F79646", end_color="F79646", fill_type="solid")
+    fill_prep = PatternFill(start_color="FCD5B5", end_color="FCD5B5", fill_type="solid")
+    fill_total = PatternFill(start_color="92D050", end_color="92D050", fill_type="solid")
+    fill_zebra = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+
+    thin_side = Side(style="thin", color="B0B0B0")
+    thin_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
+
+    align_center = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    align_left = Alignment(horizontal="left", vertical="center", wrap_text=True)
 
     ws.freeze_panes = "A3"
     ws.sheet_view.showGridLines = False
-    ws.row_dimensions[1].height = config.dimensions.row_height_group
-    ws.row_dimensions[2].height = config.dimensions.row_height_sub
+    ws.row_dimensions[1].height = 24
+    ws.row_dimensions[2].height = 30
 
-    # Prepare data
-    df = register_df.copy()
-    sex_col = "sex_m_f_" if "sex_m_f_" in df.columns else "sex"
-    if sex_col not in df.columns:
-        df["sex_clean"] = "Unknown"
-    else:
-        df["sex_clean"] = df[sex_col].astype(str).str.strip().str.upper()
-
-    missing_sex_count = (
-        df["sex_clean"].isna() | df["sex_clean"].isin(["", "NAN", "NONE", "UNKNOWN"])
-    ).sum()
-
-    # Valid sex subset for disaggregation
-    valid_df = df[df["sex_clean"].isin(["M", "F", "MALE", "FEMALE"])].copy()
-    valid_df["gender"] = valid_df["sex_clean"].apply(lambda x: "M" if x.startswith("M") else "F")
-
-    age_col = "age_group" if "age_group" in valid_df.columns else "age"
-    # Create combined age_sex
-    valid_df["age_group_str"] = valid_df[age_col].astype(str).str.strip()
-    valid_df["age_sex"] = valid_df["age_group_str"] + "_" + valid_df["gender"]
-
-    # Pivot key indicators
-    indicators = ["hts_q1", "hts_sem", "prep_sem", "definedpackage_sem"]
-    available_inds = [ind for ind in indicators if ind in valid_df.columns]
-
-    # Distinct categories
-    age_groups = ["Below 15", "15-19", "20-24", "25+"]
-    genders = ["F", "M"]
-
-    # Construct columns
-    cols = ["county", "sr_name", "region"]
-    for ind in available_inds:
-        for ag in age_groups:
-            for g in genders:
-                cols.append(f"{ind}_{ag}_{g}")
-
-    # Build aggregation
-    geo_keys = ["county", "sr_name", "region"]
-    for k in geo_keys:
-        if k in valid_df.columns:
-            valid_df[k] = valid_df[k].astype(str).str.strip().str.title()
-        else:
-            valid_df[k] = "(MISSING)"
-
-    # Write simple structured disaggregated table
-    ws.cell(row=1, column=1, value="GEOGRAPHY").font = header_font
-    ws.cell(row=2, column=1, value="COUNTY").font = header_font
-    ws.cell(row=2, column=2, value="SR NAME").font = header_font
-    ws.cell(row=2, column=3, value="REGION").font = header_font
-
+    # Column widths
     ws.column_dimensions["A"].width = 22
-    ws.column_dimensions["B"].width = 22
-    ws.column_dimensions["C"].width = 22
+    ws.column_dimensions["B"].width = 12
+    ws.column_dimensions["C"].width = 18
+    for col_i in range(4, 25):
+        ws.column_dimensions[get_column_letter(col_i)].width = 12
 
-    # Group and aggregate
-    grouped = valid_df.groupby(geo_keys).size().reset_index(name="ActiveClients")
-    for r_i, row in grouped.iterrows():
-        r_num = 3 + r_i
-        ws.cell(row=r_num, column=1, value=row["county"]).font = body_font
-        ws.cell(row=r_num, column=2, value=row["sr_name"]).font = body_font
-        ws.cell(row=r_num, column=3, value=row["region"]).font = body_font
+    # Row 1 Group Headers
+    groups = [
+        ("DEMOGRAPHICS", 1, 3, fill_demo, header_font_white),
+        ("DEFINED PACKAGE", 4, 10, fill_def, header_font_white),
+        ("HTS", 11, 17, fill_hts, header_font_white),
+        ("PREP", 18, 24, fill_prep, header_font_black),
+    ]
 
-    # Footnote on missing sex (D-022)
-    footnote_row = 3 + len(grouped) + 2
-    ws.cell(
-        row=footnote_row,
-        column=1,
-        value=f"Note: {missing_sex_count} record(s) with missing or unrecorded sex excluded from sex-disaggregated breakdowns per M&E policy.",
-    ).font = Font(name="Candara", size=10, italic=True)
+    for title, start_col, end_col, fill, font in groups:
+        ws.merge_cells(start_row=1, start_column=start_col, end_row=1, end_column=end_col)
+        cell = ws.cell(1, start_col, value=title)
+        cell.font = font
+        cell.fill = fill
+        cell.alignment = align_center
+        for c in range(start_col, end_col + 1):
+            ws.cell(1, c).border = thin_border
+            ws.cell(1, c).fill = fill
+
+    # Row 2 Subheaders
+    subheaders = [
+        ("SR  NAME", fill_demo, header_font_white),
+        ("REGION", fill_demo, header_font_white),
+        ("COUNTY", fill_demo, header_font_white),
+    ]
+    age_sex_labels = [
+        "15-19_M", "15-19_F",
+        "20-24_M", "20-24_F",
+        "25+_M", "25+_F",
+        "Total",
+    ]
+    for lbl in age_sex_labels:
+        subheaders.append((lbl, fill_def, header_font_white))
+    for lbl in age_sex_labels:
+        subheaders.append((lbl, fill_hts, header_font_white))
+    for lbl in age_sex_labels:
+        subheaders.append((lbl, fill_prep, header_font_black))
+
+    for c_idx, (lbl, fill, font) in enumerate(subheaders, start=1):
+        cell = ws.cell(2, c_idx, value=lbl)
+        cell.border = thin_border
+        cell.fill = fill
+        cell.font = font
+        cell.alignment = align_center
+
+    # Rows 3+ Data Rows
+    for r_i, (_, row) in enumerate(kpi_df.iterrows(), start=3):
+        is_even = (r_i % 2 == 0)
+        for c_idx in range(1, 25):
+            cell = ws.cell(r_i, c_idx)
+            val = row.iloc[c_idx - 1]
+            cell.value = val
+            cell.border = thin_border
+            if is_even:
+                cell.fill = fill_zebra
+            if c_idx <= 3:
+                cell.font = body_font
+                cell.alignment = align_left if c_idx != 2 else align_center
+            else:
+                cell.alignment = align_center
+                if c_idx in [10, 17, 24]:
+                    cell.font = total_font
+                else:
+                    cell.font = body_font
+
+    # TOTAL Row
+    last_r = 3 + len(kpi_df)
+    ws.merge_cells(start_row=last_r, start_column=1, end_row=last_r, end_column=3)
+    c_tot = ws.cell(last_r, 1, value="TOTAL")
+    c_tot.font = total_font
+    c_tot.alignment = align_center
+    for c in range(1, 4):
+        ws.cell(last_r, c).fill = fill_total
+        ws.cell(last_r, c).border = thin_border
+
+    for c in range(4, 25):
+        col_let = get_column_letter(c)
+        cell = ws.cell(last_r, c, value=f"=SUM({col_let}3:{col_let}{last_r - 1})")
+        cell.font = total_font
+        cell.fill = fill_total
+        cell.alignment = align_center
+        cell.border = thin_border
 
     return ws

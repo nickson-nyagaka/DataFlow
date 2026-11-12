@@ -298,28 +298,20 @@ def test_reporting_package_builder_multi_tab_and_zip(
         assert master_path.is_file()
         assert zip_path.is_file()
 
-        # Validate Master Workbook has all 6 tabs
+        # Validate Master Workbook has expected sheets (Run Metadata and Cleaning Log removed per user specification)
         wb = openpyxl.load_workbook(master_path, data_only=False)
         expected_tabs = [
             "Summary",
             "Cleaned Register",
             "Cleaned KPLHIV",
             "DQA Exceptions",
-            "Run Metadata",
-            "Cleaning Log",
+            "KPI_Disaggregation",
         ]
         for tab in expected_tabs:
             assert tab in wb.sheetnames, f"Tab '{tab}' missing in master workbook"
 
-        # Check Run Metadata tab contains confidentiality notice per D-031
-        meta_ws = wb["Run Metadata"]
-        found_notice = False
-        for r in range(1, meta_ws.max_row + 1):
-            cell_val = str(meta_ws.cell(row=r, column=1).value)
-            if "CONFIDENTIAL MEDICAL INFORMATION" in cell_val:
-                found_notice = True
-                break
-        assert found_notice is True
+        assert "Run Metadata" not in wb.sheetnames
+        assert "Cleaning Log" not in wb.sheetnames
 
         # Validate ZIP Archive
         with zipfile.ZipFile(zip_path, "r") as zf:
@@ -386,30 +378,31 @@ def test_compare_summaries_script(sample_synthetic_data: tuple[pd.DataFrame, pd.
 def test_provisional_indicators_marked_in_metadata(
     sample_synthetic_data: tuple[pd.DataFrame, pd.DataFrame],
 ) -> None:
-    """Verifies exit criterion: PROVISIONAL indicators are visibly recorded in Run Metadata."""
-    reg_df, kp_df = sample_synthetic_data
+    """Verifies that PROVISIONAL indicators are visibly recorded when exporting Run Metadata."""
+    from reporting.package_builder import export_run_metadata_sheet
 
-    with tempfile.TemporaryDirectory() as tmpdir:
-        pkg = build_reporting_package(
-            cleaned_register=reg_df,
-            cleaned_kplhiv=kp_df,
-            population="FSW",
-            period_mode="SEM",
-            output_dir=tmpdir,
-            provisional_indicators=["HTS_SEM (OQ-06)", "ViralLoad_Suppression (OQ-09)"],
-        )
+    wb = openpyxl.Workbook()
+    export_run_metadata_sheet(
+        wb,
+        "Run Metadata",
+        population="FSW",
+        period_mode="SEM",
+        input_file_hash="mock_hash_123",
+        config_hash="mock_config_456",
+        mask_identifiers=False,
+        provisional_indicators=["HTS_SEM (OQ-06)", "ViralLoad_Suppression (OQ-09)"],
+    )
 
-        wb = openpyxl.load_workbook(pkg["master_workbook"])
-        meta_ws = wb["Run Metadata"]
-        provisional_cell = None
-        for r in range(1, meta_ws.max_row + 1):
-            if str(meta_ws.cell(row=r, column=1).value) == "Provisional Indicators":
-                provisional_cell = meta_ws.cell(row=r, column=2).value
-                break
+    meta_ws = wb["Run Metadata"]
+    provisional_cell = None
+    for r in range(1, meta_ws.max_row + 1):
+        if str(meta_ws.cell(row=r, column=1).value) == "Provisional Indicators":
+            provisional_cell = meta_ws.cell(row=r, column=2).value
+            break
 
-        assert provisional_cell is not None
-        assert "HTS_SEM (OQ-06)" in str(provisional_cell)
-        assert "ViralLoad_Suppression (OQ-09)" in str(provisional_cell)
+    assert provisional_cell is not None
+    assert "HTS_SEM (OQ-06)" in str(provisional_cell)
+    assert "ViralLoad_Suppression (OQ-09)" in str(provisional_cell)
 
 
 def test_oracle_differential_comparison(

@@ -4,6 +4,6 @@ legacy_impute_missing_sex_f: true
 legacy_row_sum_flags: true
 legacy_hts_sem_month_ge_7: true
 legacy_comment_out_pwid_nsp: true
-legacy_capitalize_vocabulary: true
+legacy_capitalize_vocabulary: false
 legacy_lexicographic_column_sort: true
 

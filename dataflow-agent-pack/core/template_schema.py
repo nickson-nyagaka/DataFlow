@@ -169,20 +169,42 @@ KPLHIV_HEADERS = [
 ]
 
 
+def find_encounter_block_starts(raw_columns: list[str]) -> list[int]:
+    """Finds starting indices of repeating clinical encounter blocks.
+    In the national KP register template, each encounter block begins with a peer education column
+    ('Received peer education(Y/N)').
+    """
+    starts: list[int] = []
+    for idx, col in enumerate(raw_columns):
+        norm = normalize_token(str(col))
+        if "received_peer_education" in norm:
+            starts.append(idx)
+    return starts
+
+
 def is_kp_template_register(raw_columns: list[str]) -> bool:
-    """Detects whether raw register columns match the official 53-column-per-encounter KP template structure."""
-    if len(raw_columns) < 72:
+    """Detects whether raw register columns match the official KP template structure
+    (multi-visit repeating encounter blocks, ~53 columns per encounter).
+    Accommodates any KP typology (FSW, MSM, TG, PWID, VP) and partner variations
+    in demographic column counts (e.g. 18, 19, 20 columns).
+    """
+    if len(raw_columns) < 70:
         return False
 
-    # Check if index 19 (encounter 1) and index 72 (encounter 2) are both 'received_peer_education_y_n'
-    norm_19 = normalize_token(raw_columns[19])
-    norm_72 = normalize_token(raw_columns[72])
+    starts = find_encounter_block_starts(raw_columns)
+    if len(starts) >= 2:
+        # Standard KP multi-visit encounter blocks are separated by 50-55 columns
+        if 50 <= (starts[1] - starts[0]) <= 55:
+            return True
 
-    if "received_peer_education" in norm_19 and "received_peer_education" in norm_72:
+    # Check if total columns is ~337 (19 demographics + 6 * 53) or has at least 330 columns
+    if len(raw_columns) in (337, 338):
         return True
 
-    # Check if total columns is exactly 337 (19 demographics + 6 * 53)
-    if len(raw_columns) == 337:
+    if len(raw_columns) >= 330 and starts and (15 <= starts[0] <= 25):
+        return True
+
+    if len(starts) == 1 and starts[0] >= 15 and (len(raw_columns) - starts[0]) >= 50:
         return True
 
     return False
@@ -196,18 +218,22 @@ def build_register_template_mapping(
     """Generates complete canonical mapping for all Register columns.
 
     Supports:
-    1. Official 337-column KP_TEMPLATE.xlsx structure with 6 visit encounter blocks of 53 columns each.
+    1. Official KP template structure (53 columns per encounter, visits 1-6) across all typologies
+       (TG, PWID, MSM, FSW, VP) with variable demographic column counts (e.g. 19 or 20 columns).
     2. Legacy / synthetic files with pre-suffixed columns (e.g. prep_status_1).
     """
     if alias_map is None:
         alias_map = DEFAULT_REGISTER_ALIASES
 
-    # If the sheet is the official 337-column template (or multi-block template):
+    # If the sheet is the official template (or multi-block template):
     if is_kp_template_register(raw_columns):
         mapping: dict[str, str] = {}
+        starts = find_encounter_block_starts(raw_columns)
 
-        # 1. Map demographic headers (first 19 columns) using priority alias resolver
-        demo_cols = raw_columns[:19]
+        first_enc = starts[0] if starts else 19
+
+        # 1. Map demographic headers using priority alias resolver
+        demo_cols = raw_columns[:first_enc]
         demo_mapping = resolve_column_aliases(
             raw_columns=demo_cols,
             alias_map=alias_map,
@@ -216,11 +242,12 @@ def build_register_template_mapping(
         mapping.update(demo_mapping)
 
         # 2. Map clinical encounter blocks (53 columns per block, up to 6 visits)
-        num_encounters = min(6, (len(raw_columns) - 19) // 53)
+        num_encounters = min(6, len(starts)) if len(starts) >= 2 else min(6, (len(raw_columns) - first_enc) // 53)
         for enc in range(num_encounters):
             visit_num = enc + 1
+            enc_start = starts[enc] if enc < len(starts) else (first_enc + enc * 53)
             for i, base_tok in enumerate(ENCOUNTER_BASE_TOKENS):
-                col_idx = 19 + enc * 53 + i
+                col_idx = enc_start + i
                 if col_idx < len(raw_columns):
                     raw_col = raw_columns[col_idx]
                     canonical_name = f"{base_tok}_{visit_num}"

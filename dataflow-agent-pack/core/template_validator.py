@@ -10,7 +10,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from core.ingestion import get_workbook_sheet_names, normalize_token
-from core.template_schema import is_kp_template_register
+from core.template_schema import find_encounter_block_starts, is_kp_template_register
 
 
 def extract_sheet_headers(p: Path, sheet_name: str, expected_skiprows: int = 2) -> list[str]:
@@ -239,12 +239,14 @@ def validate_kp_template_concordance(
         )
 
     # Detect template format & encounter blocks
+    starts = find_encounter_block_starts(raw_reg_headers)
     if is_kp_template_register(raw_reg_headers):
         detected_format = "OFFICIAL_KP_TEMPLATE_337"
-        encounters_detected = min(6, max(0, (reg_cols_count - 19) // 53))
-        if reg_cols_count < 337:
+        first_enc = starts[0] if starts else 19
+        encounters_detected = min(6, len(starts)) if len(starts) >= 1 else min(6, max(0, (reg_cols_count - first_enc) // 53))
+        if reg_cols_count < 330:
             warnings.append(
-                f"Register has {reg_cols_count} columns (expected 337 for all 6 encounters). "
+                f"Register has {reg_cols_count} columns (expected ~337 for all 6 encounters). "
                 f"Detected {encounters_detected} complete encounter block(s)."
             )
     elif reg_cols_count >= 100:

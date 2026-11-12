@@ -96,7 +96,7 @@ class SettingsConfig(BaseModel):
     app_name: str = "DATAFLOW"
     version: str = "0.1.0"
     max_upload_size_mb: int = Field(default=200, ge=10)
-    block_on_critical_dqa: bool = True
+    block_on_critical_dqa: bool = False
     mask_identifiers_by_default: bool = False
     temp_dir: str = "runtime/temporary"
     export_dir: str = "runtime/exports"

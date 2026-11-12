@@ -20,6 +20,7 @@ import sys
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 PHASE_FILE = ROOT / "docs" / "gates" / "PHASE_APPROVALS.md"
+GATE_FILE = PHASE_FILE
 WP_FILE = ROOT / "docs" / "gates" / "WORK_PACKAGES.md"
 PHASE_LINE = re.compile(r"^PHASE\s+(\d+)\s*\|\s*STATUS:\s*(PENDING|APPROVED|REJECTED)\b", re.I)
 WP_LINE = re.compile(
@@ -33,14 +34,15 @@ PHASES = list(range(8))
 
 def die(msg: str, code: int = 2) -> None:
     print(msg)
-    raise SystemExit(code)
+    raise SystemExit(msg)
 
 
-def read_phases() -> dict[int, str]:
-    if not PHASE_FILE.exists():
-        die(f"GATE ERROR: {PHASE_FILE} not found. Stop and tell the Owner.")
+def read_statuses(path: Path | None = None) -> dict[int, str]:
+    target = path if path is not None else GATE_FILE
+    if not target.exists():
+        die(f"GATE ERROR: {target} not found. Stop and tell the Owner.")
     found: dict[int, str] = {}
-    for raw in PHASE_FILE.read_text(encoding="utf-8").splitlines():
+    for raw in target.read_text(encoding="utf-8").splitlines():
         m = PHASE_LINE.match(raw.strip())
         if m:
             n = int(m.group(1))
@@ -51,6 +53,10 @@ def read_phases() -> dict[int, str]:
     if missing:
         die(f"GATE ERROR: missing phase line(s): {missing}")
     return found
+
+
+def read_phases() -> dict[int, str]:
+    return read_statuses(GATE_FILE)
 
 
 def current_phase(st: dict[int, str]) -> int | None:
@@ -107,7 +113,7 @@ def main(argv: list[str]) -> int:
     phases = read_phases()
     cur = current_phase(phases)
     if cur is not None:  # Mode 1: v1 behaviour
-        rework = " (REJECTED: rework only listed defects)" if phases[cur] == "REJECTED" else ""
+        rework = " (REJECTED: rework only the defects in docs/gates/REJECTIONS.md)" if phases[cur] == "REJECTED" else ""
         if len(argv) < 2:
             print(f"ALLOWED PHASE: {cur}{rework}")
             print("Work on this phase and no other. Do not edit docs/gates/PHASE_APPROVALS.md.")
@@ -115,7 +121,7 @@ def main(argv: list[str]) -> int:
         if argv[1].isdigit() and int(argv[1]) == cur:
             print(f"OK: phase {cur} is the allowed phase{rework}.")
             return 0
-        print(f"BLOCKED: only phase {cur} is allowed.")
+        print(f"BLOCKED: phase {argv[1]} is not allowed. The only allowed phase is {cur}.")
         return 1
 
     baseline, wps = read_wps()  # Mode 2

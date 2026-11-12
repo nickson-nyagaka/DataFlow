@@ -21,7 +21,7 @@ class CompatSwitches:
     legacy_row_sum_flags: bool = True
     legacy_hts_sem_month_ge_7: bool = True
     legacy_comment_out_pwid_nsp: bool = True
-    legacy_capitalize_vocabulary: bool = True
+    legacy_capitalize_vocabulary: bool = False
     legacy_lexicographic_column_sort: bool = True
 
     @classmethod
@@ -39,7 +39,7 @@ class CompatSwitches:
             legacy_row_sum_flags=data.get("legacy_row_sum_flags", True),
             legacy_hts_sem_month_ge_7=data.get("legacy_hts_sem_month_ge_7", True),
             legacy_comment_out_pwid_nsp=data.get("legacy_comment_out_pwid_nsp", True),
-            legacy_capitalize_vocabulary=data.get("legacy_capitalize_vocabulary", True),
+            legacy_capitalize_vocabulary=data.get("legacy_capitalize_vocabulary", False),
             legacy_lexicographic_column_sort=data.get("legacy_lexicographic_column_sort", True),
         )
 

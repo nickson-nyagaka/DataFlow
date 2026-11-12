@@ -54,7 +54,7 @@ def init_session_state() -> None:
         "uploaded_file_bytes": None,
         "population": "FSW",
         "period_mode": "SEM",
-        "block_on_critical": True,
+        "block_on_critical": False,
         "mask_identifiers": False,
         "pipeline_result": None,
         "stage_timings": {},
