@@ -67,17 +67,34 @@ def export_dataframe_sheet(
     if config is None:
         config = get_template_manager()
 
-    if sheet_name in workbook.sheetnames:
-        ws = workbook[sheet_name]
-    else:
-        ws = workbook.create_sheet(title=sheet_name)
-
     data = apply_identifier_masking(df) if mask_identifiers else df.copy()
 
     header_font = Font(name=config.fonts.header, size=config.fonts.size, bold=True)
     thin_side = Side(style="thin", color="000000")
     thin_border = Border(left=thin_side, right=thin_side, top=thin_side, bottom=thin_side)
     header_fill = PatternFill(start_color="F2F2F2", end_color="F2F2F2", fill_type="solid")
+
+    if getattr(workbook, "write_only", False):
+        ws = workbook.create_sheet(title=sheet_name)
+        header_cells = []
+        for col in data.columns:
+            c = openpyxl.cell.WriteOnlyCell(ws, value=str(col))
+            c.font = header_font
+            c.fill = header_fill
+            c.border = thin_border
+            c.alignment = Alignment(horizontal="center", vertical="center")
+            header_cells.append(c)
+        ws.append(header_cells)
+
+        clean_data = data.astype(object).fillna("")
+        for row in clean_data.itertuples(index=False, name=None):
+            ws.append(list(row))
+        return ws
+
+    if sheet_name in workbook.sheetnames:
+        ws = workbook[sheet_name]
+    else:
+        ws = workbook.create_sheet(title=sheet_name)
 
     ws.freeze_panes = "A2"
     ws.sheet_view.showGridLines = True
@@ -111,10 +128,7 @@ def export_cleaned_data_workbook(
     config: ExcelTemplateConfig | None = None,
 ) -> Path:
     """Exports standalone Cleaned Cohort Data workbook with Register and KPLHIV tabs."""
-    wb = openpyxl.Workbook()
-    default_sheet = wb.active
-    if default_sheet is not None:
-        wb.remove(default_sheet)
+    wb = openpyxl.Workbook(write_only=True)
 
     export_dataframe_sheet(
         wb,
@@ -134,4 +148,5 @@ def export_cleaned_data_workbook(
     out = Path(output_path)
     out.parent.mkdir(parents=True, exist_ok=True)
     wb.save(out)
+    wb.close()
     return out

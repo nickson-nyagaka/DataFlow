@@ -287,6 +287,8 @@ def build_reporting_package(
 
     master_path = out_dir / f"DATAFLOW_Master_{population.upper()}_{period_mode.upper()}.xlsx"
     master_wb.save(master_path)
+    master_wb.close()
+    del master_wb
 
     # 3. Build Modular Workbooks for ZIP Package
     pop_str = population.upper()
@@ -298,11 +300,11 @@ def build_reporting_package(
         summary_wb.remove(summary_wb.active)
     export_summary_sheet(summary_wb, sheet_name, summary_df, layout, config=manager)
     summary_wb.save(summary_only_path)
+    summary_wb.close()
+    del summary_wb
 
     cleaned_data_path = out_dir / f"02_Cleaned_Data_{pop_str}.xlsx"
-    cleaned_wb = openpyxl.Workbook()
-    if cleaned_wb.active is not None:
-        cleaned_wb.remove(cleaned_wb.active)
+    cleaned_wb = openpyxl.Workbook(write_only=True)
     export_dataframe_sheet(
         cleaned_wb,
         "Cleaned Register",
@@ -318,6 +320,8 @@ def build_reporting_package(
         config=manager,
     )
     cleaned_wb.save(cleaned_data_path)
+    cleaned_wb.close()
+    del cleaned_wb
 
     dqa_path = out_dir / f"03_DQA_Exceptions_{pop_str}.xlsx"
     dqa_wb = openpyxl.Workbook()
@@ -327,6 +331,8 @@ def build_reporting_package(
         dqa_wb, "DQA Exceptions", exceptions_df=dqa_exceptions_df, config=manager
     )
     dqa_wb.save(dqa_path)
+    dqa_wb.close()
+    del dqa_wb
 
     # Standalone Age x Sex Disaggregation workbook per D-039
     disagg_path: Path | None = None
@@ -339,6 +345,8 @@ def build_reporting_package(
             disagg_wb, "Age_Sex_Disaggregation", cleaned_register, config=manager
         )
         disagg_wb.save(disagg_path)
+        disagg_wb.close()
+        del disagg_wb
 
     # 4. Assemble ZIP Package
     zip_path = out_dir / f"DATAFLOW_Package_{pop_str}_{period_str}.zip"

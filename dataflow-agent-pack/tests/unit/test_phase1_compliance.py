@@ -17,7 +17,7 @@ def test_zero_analytics_code_outside_oracle():
 
     # Check that analytics/ directory contains no python code in Phases 0-3
     analytics_dir = BASE_DIR / "analytics"
-    if cur < 4 and analytics_dir.exists():
+    if cur is not None and cur < 4 and analytics_dir.exists():
         py_files = list(analytics_dir.glob("**/*.py"))
         assert len(py_files) == 0, f"Disallowed analytics code found in Phase {cur}: {py_files}"
 
@@ -67,7 +67,7 @@ def test_zero_analytics_code_outside_oracle():
             "compat.py",
         }
     else:
-        # Phase 6+ allows runner, override
+        # Phase 6+ allows runner, override, template validation
         allowed_core_files = {
             "config_models.py",
             "exceptions.py",
@@ -83,6 +83,9 @@ def test_zero_analytics_code_outside_oracle():
             "compat.py",
             "runner.py",
             "override.py",
+            "diagnostics.py",
+            "template_schema.py",
+            "template_validator.py",
         }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files

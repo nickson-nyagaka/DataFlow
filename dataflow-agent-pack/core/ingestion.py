@@ -44,13 +44,29 @@ DEFAULT_REGISTER_ALIASES = {
         "client_uic",
     ],
     "county": ["county"],
-    "region": ["region"],
+    "region": ["region", "region_name", "province", "zone", "area"],
     "sr_name": [
         "sr_name",
         "sub_recipient",
+        "sub_recipient_name",
+        "subrecipient",
+        "subrecipient_name",
         "sr",
         "implementing_partner",
+        "implementing_partner_name",
         "partner",
+        "partner_name",
+        "cbo",
+        "cbo_name",
+        "ip",
+        "ip_name",
+        "organization",
+        "agency",
+        "facility",
+        "site_name",
+        "site",
+        "dice",
+        "drop_in_centre",
     ],
     "age": ["age", "age_years", "current_age"],
     "sex_m_f_": ["sex_m_f_", "sex", "gender", "sex_m_f"],
@@ -95,27 +111,43 @@ def normalize_token(text: Any) -> str:
 def get_workbook_sheet_names(file_path: Path) -> list[str]:
     """Retrieves all sheet names from an Excel file without loading data."""
     ext = file_path.suffix.lower()
-    if ext in [".xlsx", ".xlsm"]:
-        import openpyxl
+    try:
+        if ext != ".csv":
+            try:
+                from python_calamine import CalamineWorkbook
 
-        wb = openpyxl.load_workbook(file_path, read_only=True, keep_links=False)
-        sheets = wb.sheetnames
-        wb.close()
-        return sheets
-    elif ext == ".xlsb":
-        import pyxlsb
+                wb = CalamineWorkbook.from_path(str(file_path))
+                return wb.sheet_names
+            except Exception:
+                pass
 
-        with pyxlsb.open_workbook(file_path) as wb:
-            return wb.sheets
-    elif ext == ".xls":
-        import xlrd
+        if ext in [".xlsx", ".xlsm"]:
+            import openpyxl
 
-        wb = xlrd.open_workbook(file_path, on_demand=True)
-        return wb.sheet_names()
-    elif ext == ".csv":
-        return [file_path.stem]
-    else:
-        raise IngestionError(f"Unsupported file format '{ext}' for workbook: {file_path.name}")
+            wb = openpyxl.load_workbook(file_path, read_only=True, keep_links=False)
+            sheets = wb.sheetnames
+            wb.close()
+            return sheets
+        elif ext == ".xlsb":
+            import pyxlsb
+
+            with pyxlsb.open_workbook(file_path) as wb:
+                return wb.sheets
+        elif ext == ".xls":
+            import xlrd
+
+            wb = xlrd.open_workbook(file_path, on_demand=True)
+            return wb.sheet_names()
+        elif ext == ".csv":
+            return [file_path.stem]
+        else:
+            raise IngestionError(f"Unsupported file format '{ext}' for workbook: {file_path.name}")
+    except IngestionError:
+        raise
+    except Exception as e:
+        raise IngestionError(
+            f"Failed to inspect sheets in '{file_path.name}': corrupted or invalid workbook ({e})"
+        ) from e
 
 
 def detect_sheet_name(available_sheets: list[str], aliases: list[str], sheet_type: str) -> str:
@@ -147,18 +179,33 @@ def detect_header_skiprows(
         else ("openpyxl" if ext in [".xlsx", ".xlsm"] else None)
     )
 
+    engine_kwargs = {"read_only": True} if engine == "openpyxl" else None
     try:
         if ext == ".csv":
             df_preview = pd.read_csv(file_path, header=None, nrows=max_scan_rows, dtype=str)
         else:
-            df_preview = pd.read_excel(
-                file_path,
-                sheet_name=sheet_name,
-                header=None,
-                nrows=max_scan_rows,
-                engine=engine,
-                dtype=str,
-            )
+            try:
+                df_preview = pd.read_excel(
+                    file_path,
+                    sheet_name=sheet_name,
+                    header=None,
+                    nrows=max_scan_rows,
+                    engine=engine,
+                    engine_kwargs=engine_kwargs,
+                    dtype=str,
+                )
+            except Exception:
+                if engine == "openpyxl":
+                    df_preview = pd.read_excel(
+                        file_path,
+                        sheet_name=sheet_name,
+                        header=None,
+                        nrows=max_scan_rows,
+                        engine="calamine",
+                        dtype=str,
+                    )
+                else:
+                    raise
     except Exception as exc:
         raise IngestionError(f"Failed to read sheet preview for '{sheet_name}': {exc}") from exc
 
@@ -218,13 +265,39 @@ def resolve_column_aliases(
                 reverse_mapping[canonical] = []
             reverse_mapping[canonical].append(raw_col)
 
-    # Check if multiple raw columns mapped to the exact same canonical target
+    # Disambiguate when multiple raw columns mapped to the exact same canonical target
     duplicates = {canonical: cols for canonical, cols in reverse_mapping.items() if len(cols) > 1}
-    if duplicates:
-        err_details = [
-            f"canonical '{k}' matched by columns {sorted(v)}" for k, v in duplicates.items()
-        ]
-        raise IngestionError(f"Ambiguous duplicate column mapping: {'; '.join(err_details)}")
+    for canonical, cols in duplicates.items():
+        norm_target = normalize_token(canonical)
+        scored: list[tuple[int, str]] = []
+        for c in cols:
+            norm_c = normalize_token(c)
+            # Exact match to canonical target has highest priority
+            if norm_c == norm_target:
+                score = 0
+            else:
+                # If target represents a code/id, prefer aliases that include "code" or "id"
+                target_is_code = ("code" in norm_target) or ("id" in norm_target)
+                cand_has_code = ("code" in norm_c) or ("id" in norm_c)
+                if target_is_code and not cand_has_code:
+                    score = 20
+                else:
+                    score = 10
+            scored.append((score, c))
+
+        scored.sort(key=lambda x: x[0])
+        min_score = scored[0][0]
+        best_candidates = [c for s, c in scored if s == min_score]
+
+        if len(best_candidates) == 1:
+            best_col = best_candidates[0]
+            for c in cols:
+                if c != best_col:
+                    del resolved_mapping[c]
+        else:
+            err_details = [f"canonical '{canonical}' matched by columns {sorted(best_candidates)}"]
+            sep = "; "
+            raise IngestionError(f"Ambiguous duplicate column mapping: {sep.join(err_details)}")
 
     # Check required columns if provided
     if required_columns:
@@ -249,12 +322,30 @@ def load_sheet_frame(
         else ("openpyxl" if ext in [".xlsx", ".xlsm"] else None)
     )
 
+    engine_kwargs = {"read_only": True} if engine == "openpyxl" else None
     if ext == ".csv":
         raw_df = pd.read_csv(file_path, skiprows=skiprows, dtype=str)
     else:
-        raw_df = pd.read_excel(
-            file_path, sheet_name=sheet_name, skiprows=skiprows, engine=engine, dtype=str
-        )
+        try:
+            raw_df = pd.read_excel(
+                file_path,
+                sheet_name=sheet_name,
+                skiprows=skiprows,
+                engine=engine,
+                engine_kwargs=engine_kwargs,
+                dtype=str,
+            )
+        except Exception:
+            if engine == "openpyxl":
+                raw_df = pd.read_excel(
+                    file_path,
+                    sheet_name=sheet_name,
+                    skiprows=skiprows,
+                    engine="calamine",
+                    dtype=str,
+                )
+            else:
+                raise
 
     rows_in = len(raw_df)
 
@@ -328,13 +419,15 @@ def ingest_workbook(
     kp_df, kp_rows_in, kp_dropped_empty = load_sheet_frame(p, kp_sheet, kp_skiprows)
 
     # 4. Resolve column aliases
+    from core.template_schema import build_register_template_mapping
+
     merged_reg_aliases = dict(DEFAULT_REGISTER_ALIASES)
     if population_config.column_aliases:
         merged_reg_aliases.update(population_config.column_aliases)
 
     required_cols = population_config.required_columns or DEFAULT_REQUIRED_COLUMNS
 
-    reg_mapping = resolve_column_aliases(
+    reg_mapping = build_register_template_mapping(
         raw_columns=list(reg_df.columns),
         alias_map=merged_reg_aliases,
         required_columns=required_cols,
@@ -356,6 +449,25 @@ def ingest_workbook(
             "nupi",
         ],
         "county": ["county"],
+        "sr_name": [
+            "sr_name",
+            "sub_recipient",
+            "sub_recipient_name",
+            "subrecipient",
+            "subrecipient_name",
+            "sr",
+            "implementing_partner",
+            "implementing_partner_name",
+            "partner",
+            "partner_name",
+            "cbo",
+            "cbo_name",
+            "ip",
+            "ip_name",
+            "facility",
+            "site",
+        ],
+        "region": ["region", "region_name", "province", "zone", "area"],
         "sub_county": ["sub_county"],
         "ward": ["ward"],
         "sex_m_f_": ["sex", "gender", "sex_m_f_"],
@@ -365,8 +477,17 @@ def ingest_workbook(
     kp_mapping = resolve_column_aliases(
         raw_columns=list(kp_df.columns),
         alias_map=kp_map,
-        required_columns=["kp_vp_unique_identifier_code"],
+        required_columns=["kp_vp_unique_identifier_code"] if not kp_df.empty else None,
     )
+
+    # Map primary viral load column (Levels copies/ml) on KPLHIV sheet if present
+    for raw_col in kp_df.columns:
+        norm = normalize_token(raw_col)
+        if "levels_copies_ml" in norm or norm == "levels" or "viral_load" in norm:
+            if "levels_copies_ml_" not in kp_mapping.values():
+                kp_mapping[raw_col] = "levels_copies_ml_"
+                break
+
     kp_df = kp_df.rename(columns=kp_mapping)
 
     # 5. Populate and verify audit records

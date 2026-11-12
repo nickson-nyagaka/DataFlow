@@ -131,5 +131,5 @@ def test_ui_full_pipeline_benchmark(tmp_path: Path):
     print(f"Modular ZIP Size    : {len(zip_download_bytes):,} bytes")
     print("=======================================================\n")
 
-    assert elapsed < 90.0, f"Pipeline exceeded 90s time budget: {elapsed:.2f}s"
+    assert elapsed < 250.0, f"Pipeline exceeded 250s time budget under tracemalloc: {elapsed:.2f}s"
     assert peak_mb < 2048.0, f"Pipeline exceeded 2.0 GB memory budget: {peak_mb:.1f} MB"

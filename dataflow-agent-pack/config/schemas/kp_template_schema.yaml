@@ -1,0 +1,21 @@
+version: "1.0.0"
+description: "Official Kenya Key Population Cohort Register & KPLHIV Sheet Schema"
+source_template: "reference/KP_TEMPLATE.xlsx"
+
+register_sheet:
+  header_skiprows: 2
+  total_columns: 337
+  demographic_columns_count: 19
+  encounters_count: 6
+  columns_per_encounter: 53
+  required_columns:
+    - "kp_vp_unique_identifier_code"
+    - "county"
+    - "date_of_enrolment"
+
+kplhiv_sheet:
+  header_skiprows: 2
+  total_columns: 72
+  primary_viral_load_column_index: 55
+  required_columns:
+    - "kp_vp_unique_identifier_code"

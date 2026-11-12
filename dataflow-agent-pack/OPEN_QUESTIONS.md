@@ -283,4 +283,45 @@ Status values: Open · Answered · Resolved · Withdrawn.
 - **Date decided:** 2026-11-11
 - **Affected file/function/column/phase:** `app.py`, `ui/`, Phase 6.
 
+---
+
+### OQ-36: Windows Deployment Script (`run_dataflow.ps1` & `.bat`) Architecture
+- **Status:** Resolved
+- **Decision:** Dual launcher: automated `run_dataflow.ps1` with an execution-policy auto-bypass companion `run_dataflow.bat`, verifying python environment and auto-launching browser at `http://127.0.0.1:8501` (D-045).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `run_dataflow.ps1`, `run_dataflow.bat`, Phase 7.
+
+---
+
+### OQ-37: Large-File Performance Stress Testing & Audit Matrix
+- **Status:** Resolved
+- **Decision:** Progressive, end-to-end stress testing matrix across 10k, 40k, 80k, 120k, and 160k rows × 100-300 columns using realistic Register and KPLHIV workbooks; 3x runs reporting median execution time, peak memory, per-stage timings, analytical accuracy equivalence, memory leaks/copies, and documenting results in `docs/benchmarks/PERFORMANCE_REPORT.md` (D-046).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `scripts/audit/benchmark_stress.py`, `docs/benchmarks/PERFORMANCE_REPORT.md`, Phase 7.
+
+---
+
+### OQ-38: Network Isolation Verification Protocol
+- **Status:** Resolved
+- **Decision:** Programmatic socket monkeypatching test in `tests/integration/test_network_isolation.py` intercepting all outbound socket/urllib/requests calls during full run + offline `pip-audit` vulnerability review (D-047).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `tests/integration/test_network_isolation.py`, Phase 7.
+
+---
+
+### OQ-39: Field Error Diagnostic & Support Bundle Handling
+- **Status:** Resolved
+- **Decision:** One-click sanitized Diagnostic Support Bundle export in `runtime/audit/diagnostics/` packaging system specs, environment, config hashes, and scrubbed tracebacks (ZERO PII/UICs) (D-048).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `core/diagnostics.py`, `ui/about.py`, Phase 7.
+
+---
+
+### OQ-40: Provisional Indicators & Unresolved Questions Final Documentation
+- **Status:** Resolved
+- **Decision:** Dedicated appendix in `docs/reports/PHASE_7_REPORT.md`, dedicated section in `docs/USER_GUIDE.md`, and explicit marking in exported Excel Run Metadata sheet (D-049).
+- **Date decided:** 2026-11-11
+- **Affected file/function/column/phase:** `docs/reports/PHASE_7_REPORT.md`, `docs/USER_GUIDE.md`, Phase 7.
+
+
 

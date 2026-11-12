@@ -16,7 +16,12 @@ def build_register_summary(
     if compat is None:
         compat = CompatSwitches()
 
-    group_cols = ["county", "sr_name", "region"]
+    group_cols = [c for c in ["county", "sr_name", "region"] if c in df.columns]
+    if not group_cols:
+        group_cols = ["county"]
+        if "county" not in df.columns:
+            df = df.copy()
+            df["county"] = "Unknown"
     legacy_row_sum = compat.legacy_row_sum_flags
 
     # TotalCohort & TotalPE
@@ -198,6 +203,9 @@ def merge_final_summary(
             if k in d.columns:
                 d[k] = d[k].astype(str).str.strip().str.title()
 
-    final_df = pd.merge(s_reg, s_kp, on=keys, how="left")
-    final_df = pd.merge(final_df, s_age, on=keys, how="left")
+    kp_keys = [k for k in keys if k in s_reg.columns and k in s_kp.columns]
+    age_keys = [k for k in keys if k in s_reg.columns and k in s_age.columns]
+
+    final_df = pd.merge(s_reg, s_kp, on=kp_keys, how="left") if kp_keys else s_reg
+    final_df = pd.merge(final_df, s_age, on=age_keys, how="left") if age_keys else final_df
     return final_df

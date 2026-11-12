@@ -49,33 +49,49 @@ def validate_uploaded_bytes(
     if len(file_bytes) == 0:
         return False, "The uploaded file is empty (0 bytes). Please upload a valid cohort workbook."
 
-    # For .xlsx files, inspect sheet structure with openpyxl read-only
-    if ext == ".xlsx":
+    # For Excel workbooks, inspect sheet structure
+    if ext in [".xlsx", ".xlsm", ".xlsb", ".xls"]:
+        sheetnames: list[str] = []
+
+        # 1. Try Calamine (fast, native xlsx/xlsb/xls support)
         try:
-            wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
-            sheetnames = wb.sheetnames
-            wb.close()
+            from python_calamine import CalamineWorkbook
 
-            # Check for at least one sheet containing Register or Cohort
-            reg_found = any(
-                "REG" in s.upper() or "COHORT" in s.upper() or population in s.upper()
-                for s in sheetnames
-            )
-            if not reg_found and len(sheetnames) == 1:
-                # Single sheet workbook is accepted as register
-                reg_found = True
-
-            if not reg_found:
-                return (
-                    False,
-                    f"Required register sheet not found. Workbook contains: {sheetnames}. "
-                    "Expected a sheet named 'Register' or matching the target population.",
-                )
-
+            wb_c = CalamineWorkbook.from_filelike(io.BytesIO(file_bytes))
+            sheetnames = wb_c.sheet_names
         except Exception:
+            pass
+
+        # 2. Try openpyxl if .xlsx/.xlsm and calamine failed
+        if not sheetnames and ext in [".xlsx", ".xlsm"]:
+            try:
+                wb = openpyxl.load_workbook(io.BytesIO(file_bytes), read_only=True, data_only=True)
+                sheetnames = wb.sheetnames
+                wb.close()
+            except Exception:
+                pass
+
+        # If neither loader could parse any sheets, the workbook is corrupt or unreadable
+        if not sheetnames:
             return (
                 False,
                 "The uploaded Excel workbook appears to be corrupt or malformed and could not be parsed.",
+            )
+
+        # Check for at least one sheet containing Register or Cohort
+        reg_found = any(
+            "REG" in s.upper() or "COHORT" in s.upper() or population.upper() in s.upper()
+            for s in sheetnames
+        )
+        if not reg_found and len(sheetnames) == 1:
+            # Single sheet workbook is accepted as register
+            reg_found = True
+
+        if not reg_found:
+            return (
+                False,
+                f"Required register sheet not found. Workbook contains: {sheetnames}. "
+                "Expected a sheet named 'Register' or matching the target population.",
             )
 
     return True, None
@@ -164,6 +180,24 @@ def render_upload() -> None:
             st.session_state["stage"] = "UPLOADED"
             st.session_state["error_message"] = None
 
+            # Pre-Processing Template Concordance Audit
+            from core.template_validator import validate_kp_template_concordance
+
+            temp_dir = Path("runtime/temporary")
+            temp_dir.mkdir(parents=True, exist_ok=True)
+            temp_path = temp_dir / f"upload_{file_hash[:10]}_{file_name}"
+            temp_path.write_bytes(file_bytes)
+
+            template_report = validate_kp_template_concordance(temp_path)
+            if not template_report.is_valid:
+                st.session_state["stage"] = "ERROR"
+                st.session_state["error_message"] = "; ".join(template_report.errors)
+                st.error(
+                    "❌ **Template Concordance Error:**\n\n"
+                    + "\n".join(f"- {e}" for e in template_report.errors)
+                )
+                return
+
             st.success(
                 f"✅ **File Validated Successfully!**\n\n"
                 f"• **Filename:** `{file_name}` ({len(file_bytes):,} bytes)\n\n"
@@ -171,6 +205,9 @@ def render_upload() -> None:
                 f"• **Target Population:** `{population}` | **Period:** `{period_mode}`",
                 icon="✅",
             )
+
+            with st.expander("📋 Pre-Processing Template Concordance Audit", expanded=True):
+                st.markdown(template_report.summary_markdown())
 
             if st.button("🚀 Proceed to Processing", type="primary", use_container_width=True):
                 st.session_state["active_page"] = "Processing"

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import platform
 import sys
+from pathlib import Path
 
 import streamlit as st
 
@@ -78,6 +79,31 @@ def render_about() -> None:
         )
         st.write("• **Network Binding:** `127.0.0.1:8501 (Localhost Only)`")
         st.write("• **Telemetry / Usage Stats:** `Disabled (gatherUsageStats = false)`")
+
+    st.divider()
+    st.subheader("🩺 Diagnostic Support Bundle")
+    st.caption(
+        "Generate a sanitized diagnostic ZIP archive containing environment specs, configuration hashes, "
+        "and redacted logs (with zero client identifiers or PII) for technical assistance."
+    )
+    from core.diagnostics import build_diagnostic_bundle
+
+    if st.button("Generate Diagnostic Support Bundle 📦", use_container_width=True):
+        bundle_path = build_diagnostic_bundle()
+        st.session_state["diag_bundle_path"] = str(bundle_path)
+        st.success(f"Diagnostic bundle generated: `{bundle_path.name}`")
+
+    bundle_path_str = st.session_state.get("diag_bundle_path")
+    if bundle_path_str and Path(bundle_path_str).exists():
+        with open(bundle_path_str, "rb") as bf:
+            bbytes = bf.read()
+        st.download_button(
+            label="Download Diagnostic Support Bundle (.zip) 📥",
+            data=bbytes,
+            file_name=Path(bundle_path_str).name,
+            mime="application/zip",
+            use_container_width=True,
+        )
 
 
 render_about()

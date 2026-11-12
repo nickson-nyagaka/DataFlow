@@ -121,6 +121,33 @@ def test_ambiguous_alias_raises_named_error_without_data():
         assert "0712" not in msg
 
 
+def test_peer_educator_column_disambiguation():
+    """Verifies that real registers containing both 'Peer Educator' and 'Peer Educator Code' disambiguate cleanly."""
+    alias_map = {
+        "kp_vp_unique_identifier_code": ["uic"],
+        "peer_educator_code": ["peer_educator_code", "pe_code", "peer_educator"],
+        "county": ["county"],
+        "date_of_enrolment": ["date_of_enrolment"],
+    }
+
+    # Case 1: Both Peer Educator (name) and Peer Educator Code (code) present
+    raw_cols_both = ["uic", "Peer Educator", "Peer Educator Code", "county", "date_of_enrolment"]
+    mapping_both = resolve_column_aliases(raw_cols_both, alias_map)
+    assert mapping_both["Peer Educator Code"] == "peer_educator_code"
+    assert "Peer Educator" not in mapping_both
+
+    # Case 2: Only Peer Educator present (fallback mapping)
+    raw_cols_pe_only = ["uic", "Peer Educator", "county", "date_of_enrolment"]
+    mapping_pe = resolve_column_aliases(raw_cols_pe_only, alias_map)
+    assert mapping_pe["Peer Educator"] == "peer_educator_code"
+
+    # Case 3: Both PE Code and Peer Educator present
+    raw_cols_pe_code = ["uic", "PE Code", "Peer Educator", "county", "date_of_enrolment"]
+    mapping_code = resolve_column_aliases(raw_cols_pe_code, alias_map)
+    assert mapping_code["PE Code"] == "peer_educator_code"
+    assert "Peer Educator" not in mapping_code
+
+
 def test_renamed_column_resolved_and_missing_required_column_structured_error():
     """Exit criterion 4: Renamed column resolved via alias; missing required column produces a structured error."""
     alias_map = {

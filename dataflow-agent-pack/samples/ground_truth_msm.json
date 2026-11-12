@@ -1,0 +1,27 @@
+{
+  "population": "MSM",
+  "seed": 42,
+  "total_unique_clients": 300,
+  "planted_defects": {
+    "duplicate_uic_encounters": 3,
+    "float_formatted_ids": 3,
+    "mixed_case_known_positive": 20,
+    "missing_age": 5,
+    "missing_sex": 3,
+    "missing_county": 2,
+    "missing_sr_name": 2,
+    "negative_on_art": 2,
+    "positive_not_on_art": 2,
+    "prep_in_positive": 2,
+    "tb_diagnosed_not_screened": 2,
+    "sti_diagnosed_not_screened": 2,
+    "viral_load_ldl": 10,
+    "viral_load_numeric_suppressed": 10,
+    "viral_load_unsuppressed": 10,
+    "viral_load_unparseable": 10,
+    "ccc_register_not_in_kplhiv": 0,
+    "ccc_kplhiv_not_in_register": 1
+  },
+  "file_sha256": "57d39a93ec9b6a02be97d468a4cb833c15bc4aa3302e4f7aef22e136a6605b92",
+  "file_path": "samples\\Sample_MSM_Cohort.xlsx"
+}

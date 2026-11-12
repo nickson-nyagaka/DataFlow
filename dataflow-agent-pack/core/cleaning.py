@@ -126,6 +126,8 @@ def clean_register_frame(
     # 3. Handle missing Sub-Recipient (sr_name) per D-009
     if "sr_name" in cleaned.columns:
         cleaned["sr_name"] = cleaned["sr_name"].fillna("Unknown")
+    else:
+        cleaned["sr_name"] = "Unknown"
 
     # 4. Parse Dates (enrolment, DOB, visit dates) per D-011
     date_cols = [

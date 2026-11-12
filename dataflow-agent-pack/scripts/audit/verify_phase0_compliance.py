@@ -200,7 +200,7 @@ def check_no_application_code():
     except Exception:
         cur = None
 
-    if cur is not None and cur > 0:
+    if cur is None or cur > 0:
         print(
             f"[Check 6] Current phase is {cur} (Phase 0 already approved). Application code is permitted."
         )

@@ -21,6 +21,7 @@ private_data/
 *.xls
 *.csv
 !templates/**/*.xlsx
+!reference/**/*.xlsx
 !tests/fixtures/**/*.xlsx
 !tests/fixtures/**/*.csv
 !tests/synthetic/fixtures/**/*

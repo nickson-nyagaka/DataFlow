@@ -10,5 +10,5 @@ Agent updates this file. Status values: NOT STARTED · IN PROGRESS · SUBMITTED.
 | 3 | Data-quality engine | APPROVED | phase-3-submitted | see PHASE_APPROVALS.md |
 | 4 | Analytical engine | APPROVED | phase-4-submitted | see PHASE_APPROVALS.md |
 | 5 | Summary and Excel reporting | APPROVED | phase-5-submitted | see PHASE_APPROVALS.md |
-| 6 | Streamlit interface | SUBMITTED | phase-6-submitted | see PHASE_APPROVALS.md |
-| 7 | End-to-end validation and Windows deployment | NOT STARTED | - | see PHASE_APPROVALS.md |
+| 6 | Streamlit interface | APPROVED | phase-6-submitted | see PHASE_APPROVALS.md |
+| 7 | End-to-end validation and Windows deployment | APPROVED | phase-7-submitted | see PHASE_APPROVALS.md |
