@@ -10,7 +10,8 @@ from __future__ import annotations
 import pandas as pd
 import streamlit as st
 
-from ui.session import render_access_guard
+from core.workflow_manager import WorkflowStage
+from ui.session import advance_workflow_stage, render_access_guard
 
 
 def render_analytics() -> None:
@@ -177,6 +178,19 @@ def render_analytics() -> None:
         st.subheader("8. KPI Indicators by Age and Sex")
         st.caption("Key Programme Indicators (Defined Package, HTS, PrEP) disaggregated by demographic categories (notebook Cell 84).")
         st.dataframe(kpi_df, use_container_width=True, hide_index=True)
+
+    # 9. Workflow Progression: Proceed to Report Exports per Master Brief §13
+    st.divider()
+    st.subheader("🏁 Next Workflow Step")
+    st.caption("Proceed to the Export Reports page to generate and download formatted Global Fund packages.")
+
+    col_inf, col_btn = st.columns([2, 1])
+    with col_inf:
+        st.info("ℹ️ Proceed to configure reporting period and download consolidated packages.")
+    with col_btn:
+        if st.button("📥 Proceed to Report Exports ➡️", type="primary", use_container_width=True):
+            advance_workflow_stage(WorkflowStage.ANALYTICS_VIEWED)
+            st.switch_page("ui/exports.py")
 
 
 render_analytics()

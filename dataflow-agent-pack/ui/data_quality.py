@@ -18,8 +18,9 @@ import streamlit as st
 
 from core.override import OverrideManager
 from core.validation import RULE_DEFINITIONS
+from core.workflow_manager import WorkflowStage
 from reporting.dqa_exporter import export_dqa_exceptions_workbook
-from ui.session import render_access_guard
+from ui.session import advance_workflow_stage, render_access_guard
 
 
 def render_data_quality() -> None:
@@ -208,6 +209,20 @@ def render_data_quality() -> None:
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
             use_container_width=True,
         )
+
+    # 6. Workflow Progression: Continue to Dashboard per Master Brief §11.1
+    st.divider()
+    st.subheader("🏁 Data Quality Review Completion")
+    st.caption("Acknowledge review of the DQA findings above to proceed to the Executive Dashboard.")
+
+    col_ack, col_btn = st.columns([2, 1])
+    with col_ack:
+        st.info("ℹ️ Proceeding to the Dashboard records that DQA findings have been reviewed for this cohort.")
+    with col_btn:
+        if st.button("📊 Continue to Dashboard ➡️", type="primary", use_container_width=True):
+            st.session_state["dqa_reviewed"] = True
+            advance_workflow_stage(WorkflowStage.DQA_REVIEWED)
+            st.switch_page("ui/dashboard.py")
 
 
 render_data_quality()

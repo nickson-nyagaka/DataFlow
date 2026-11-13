@@ -11,7 +11,8 @@ from __future__ import annotations
 import hashlib
 import json
 import time
-from dataclasses import dataclass
+from collections.abc import Callable
+from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
@@ -25,7 +26,8 @@ from analytics.kplhiv import compute_kplhiv_summary, process_kplhiv_frame
 from core.cleaning import clean_kplhiv_frame, clean_register_frame
 from core.config_models import load_population_config
 from core.ingestion import ingest_workbook
-from core.validation import DQAResults, run_dqa
+from core.progress_manager import ProgressManager
+from core.validation import RULE_DEFINITIONS, DQAResults, run_dqa
 from reporting.package_builder import build_export_summary, build_reporting_package
 
 RUN_METADATA_PATH = Path("runtime/run_metadata.json")
@@ -58,6 +60,7 @@ class PipelineResult:
     duration_seconds: float
     timestamp: str
     cached: bool = False
+    progress_snapshot: dict[str, Any] = field(default_factory=dict)
 
 
 def compute_file_hash(source: bytes | Path | str) -> str:
@@ -121,6 +124,7 @@ def run_full_pipeline(
     mask_identifiers: bool = False,
     force_rerun: bool = False,
     provisional_indicators: list[str] | None = None,
+    progress_callback: Callable[[dict[str, Any]], None] | None = None,
 ) -> PipelineResult:
     """
     Executes the complete DATAFLOW pipeline across all stages with per-stage timings.
@@ -129,6 +133,7 @@ def run_full_pipeline(
     """
     start_total = time.perf_counter()
     stage_timings: dict[str, float] = {}
+    pm = ProgressManager(callback=progress_callback)
 
     # 1. Compute file hash and config hash
     file_hash = compute_file_hash(file_source)
@@ -137,6 +142,9 @@ def run_full_pipeline(
     if not force_rerun:
         cached = get_cached_result(file_hash, config_hash, population, period_mode)
         if cached is not None:
+            for s_id in ["ingestion", "cleaning", "dqa", "analytics", "reporting"]:
+                pm.complete_stage(s_id, "Completed (Retrieved from cache)")
+            cached.progress_snapshot = pm.snapshot()
             return cached
 
     # Save bytes to temporary file if bytes provided
@@ -152,18 +160,37 @@ def run_full_pipeline(
 
     try:
         # Stage 1: Ingestion
+        pm.start_stage("ingestion", f"Ingesting {population} register and KPLHIV worksheets...")
         t0 = time.perf_counter()
         pop_config = load_population_config(population, config_dir=config_dir)
         reg_raw, kp_raw, audit = ingest_workbook(work_path, pop_config)
         stage_timings["ingestion"] = round(time.perf_counter() - t0, 3)
+        pm.complete_stage(
+            "ingestion",
+            f"Ingested {len(reg_raw):,} register records & {len(kp_raw):,} KPLHIV records",
+            metrics={
+                "register_rows": len(reg_raw),
+                "kplhiv_rows": len(kp_raw),
+                "duration_seconds": stage_timings["ingestion"],
+            },
+        )
 
         # Stage 2: Cleaning
+        pm.start_stage("cleaning", "Applying vectorized cleaning and missing geography standardization...")
         t0 = time.perf_counter()
         reg_clean = clean_register_frame(reg_raw)
+        pm.update_progress("cleaning", 50.0, "Cleaning KPLHIV records...", completed_op="Register cleaning completed")
         kp_clean = clean_kplhiv_frame(kp_raw) if not kp_raw.empty else kp_raw
         stage_timings["cleaning"] = round(time.perf_counter() - t0, 3)
+        pm.complete_stage(
+            "cleaning",
+            f"Standardized {len(reg_clean):,} records with normalized geography",
+            metrics={"cleaned_rows": len(reg_clean), "duration_seconds": stage_timings["cleaning"]},
+        )
 
-        # Stage 3: Data Quality Assurance (run with block_on_critical=False so results are collected)
+        # Stage 3: Data Quality Assurance
+        rule_count = len(RULE_DEFINITIONS)
+        pm.start_stage("dqa", f"Evaluating {rule_count} DQA rules across demographic and clinical fields...")
         t0 = time.perf_counter()
         dqa_results = run_dqa(
             reg_clean,
@@ -172,8 +199,20 @@ def run_full_pipeline(
             block_on_critical=False,
         )
         stage_timings["dqa"] = round(time.perf_counter() - t0, 3)
+        crit_n = dqa_results.severity_counts.get("Critical", 0)
+        pm.complete_stage(
+            "dqa",
+            f"Evaluated {rule_count} rules. Found {dqa_results.total_exceptions:,} exceptions ({crit_n} Critical)",
+            metrics={
+                "rules_total": rule_count,
+                "total_exceptions": dqa_results.total_exceptions,
+                "critical_count": crit_n,
+                "duration_seconds": stage_timings["dqa"],
+            },
+        )
 
         # Stage 4: Analytical Calculations
+        pm.start_stage("analytics", f"Calculating cascade indicators and service metrics for {population}...")
         t0 = time.perf_counter()
         analytics_dict = run_analytics(reg_clean, kp_clean, population=population)
         reg_analyzed = analytics_dict.get("cleaned_register", reg_clean)
@@ -188,6 +227,7 @@ def run_full_pipeline(
             kp_summary_df = pd.DataFrame()
             active_kplhiv = 0
 
+        pm.update_progress("analytics", 70.0, "Compiling summary tables and age/sex disaggregations...")
         # Build standardized summary table with (MISSING) retention
         summary_df = build_export_summary(
             cleaned_register=reg_analyzed,
@@ -198,11 +238,18 @@ def run_full_pipeline(
         # Compute KPI age x sex disaggregation summary
         kpi_summary_df = compute_kpi_demographic_summary(
             reg_analyzed,
+            population=population,
             period_mode=period_mode,
         )
         stage_timings["analytics"] = round(time.perf_counter() - t0, 3)
+        pm.complete_stage(
+            "analytics",
+            f"Calculated 48 indicators across {len(summary_df):,} geographic groupings",
+            metrics={"summary_rows": len(summary_df), "duration_seconds": stage_timings["analytics"]},
+        )
 
         # Stage 5: Reporting Package Generation
+        pm.start_stage("reporting", "Assembling Master Multi-Tab Excel Workbook and Modular ZIP Package...")
         t0 = time.perf_counter()
         package_paths = build_reporting_package(
             cleaned_register=reg_analyzed,
@@ -216,6 +263,11 @@ def run_full_pipeline(
             provisional_indicators=provisional_indicators,
         )
         stage_timings["reporting"] = round(time.perf_counter() - t0, 3)
+        pm.complete_stage(
+            "reporting",
+            "Master Excel Workbook and Modular ZIP Package successfully assembled",
+            metrics={"package_count": len(package_paths), "duration_seconds": stage_timings["reporting"]},
+        )
 
         total_duration = round(time.perf_counter() - start_total, 3)
 
@@ -260,6 +312,7 @@ def run_full_pipeline(
             duration_seconds=total_duration,
             timestamp=ts,
             cached=False,
+            progress_snapshot=pm.snapshot(),
         )
 
         # Cache result
@@ -270,6 +323,19 @@ def run_full_pipeline(
         write_run_metadata(result)
 
         return result
+
+    except Exception as exc:
+        active_stage = "ingestion"
+        if "ingestion" in stage_timings:
+            active_stage = "cleaning"
+        if "cleaning" in stage_timings:
+            active_stage = "dqa"
+        if "dqa" in stage_timings:
+            active_stage = "analytics"
+        if "analytics" in stage_timings:
+            active_stage = "reporting"
+        pm.fail_stage(active_stage, str(exc))
+        raise exc
 
     finally:
         # Clean up temporary uploaded file if created

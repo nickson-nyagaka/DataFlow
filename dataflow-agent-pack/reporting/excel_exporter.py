@@ -9,12 +9,13 @@ import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
+from analytics.demographics import compute_kpi_demographic_summary
+from core.population_rules import get_typology_subheaders
 from reporting.template_manager import (
     ExcelTemplateConfig,
     LayoutSpec,
     get_template_manager,
 )
-from analytics.demographics import compute_kpi_demographic_summary
 
 
 def _apply_border_to_range(
@@ -229,12 +230,16 @@ def export_age_sex_disaggregation_sheet(
     workbook: openpyxl.Workbook,
     sheet_name: str,
     register_df: pd.DataFrame,
+    population: str = "TG",
     period_mode: str = "Q1",
     config: ExcelTemplateConfig | None = None,
 ) -> openpyxl.worksheet.worksheet.Worksheet:
-    """
-    Renders the 24-column KPI Indicators by Age and Sex table (notebook Cell 84).
-    Disaggregates DEFINED PACKAGE, HTS, and PREP across 6 age-sex groups and totals.
+    """Renders the typology-aware KPI Indicators by Age and Sex table.
+
+    Disaggregates DEFINED PACKAGE, HTS, and PREP across typology-specific age-sex groups and totals:
+    - FSW: 15 columns total (Cols A-O) with Female-only columns
+    - MSM: 15 columns total (Cols A-O) with Male-only columns
+    - PWID / TG / VP: 24 columns total (Cols A-X) with both sexes
     """
     if config is None:
         config = get_template_manager()
@@ -245,7 +250,9 @@ def export_age_sex_disaggregation_sheet(
         ws = workbook.create_sheet(title=sheet_name)
 
     # Compute KPI Demographic DataFrame
-    kpi_df = compute_kpi_demographic_summary(register_df, period_mode=period_mode)
+    kpi_df = compute_kpi_demographic_summary(
+        register_df, population=population, period_mode=period_mode
+    )
 
     header_font_white = Font(name=config.fonts.header, size=config.fonts.size, bold=True, color="FFFFFF")
     header_font_black = Font(name=config.fonts.header, size=config.fonts.size, bold=True, color="000000")
@@ -270,19 +277,31 @@ def export_age_sex_disaggregation_sheet(
     ws.row_dimensions[1].height = 24
     ws.row_dimensions[2].height = 30
 
+    # Dynamic typology-aware subheader and column boundaries
+    age_sex_labels = get_typology_subheaders(population)
+    cols_per_ind = len(age_sex_labels)
+    total_cols = 3 + 3 * cols_per_ind
+
     # Column widths
     ws.column_dimensions["A"].width = 22
     ws.column_dimensions["B"].width = 12
     ws.column_dimensions["C"].width = 18
-    for col_i in range(4, 25):
+    for col_i in range(4, total_cols + 1):
         ws.column_dimensions[get_column_letter(col_i)].width = 12
 
     # Row 1 Group Headers
+    def_start = 4
+    def_end = 3 + cols_per_ind
+    hts_start = def_end + 1
+    hts_end = def_end + cols_per_ind
+    prep_start = hts_end + 1
+    prep_end = total_cols
+
     groups = [
         ("DEMOGRAPHICS", 1, 3, fill_demo, header_font_white),
-        ("DEFINED PACKAGE", 4, 10, fill_def, header_font_white),
-        ("HTS", 11, 17, fill_hts, header_font_white),
-        ("PREP", 18, 24, fill_prep, header_font_black),
+        ("DEFINED PACKAGE", def_start, def_end, fill_def, header_font_white),
+        ("HTS", hts_start, hts_end, fill_hts, header_font_white),
+        ("PREP", prep_start, prep_end, fill_prep, header_font_black),
     ]
 
     for title, start_col, end_col, fill, font in groups:
@@ -301,12 +320,6 @@ def export_age_sex_disaggregation_sheet(
         ("REGION", fill_demo, header_font_white),
         ("COUNTY", fill_demo, header_font_white),
     ]
-    age_sex_labels = [
-        "15-19_M", "15-19_F",
-        "20-24_M", "20-24_F",
-        "25+_M", "25+_F",
-        "Total",
-    ]
     for lbl in age_sex_labels:
         subheaders.append((lbl, fill_def, header_font_white))
     for lbl in age_sex_labels:
@@ -321,10 +334,12 @@ def export_age_sex_disaggregation_sheet(
         cell.font = font
         cell.alignment = align_center
 
+    total_col_indices = {def_end, hts_end, prep_end}
+
     # Rows 3+ Data Rows
     for r_i, (_, row) in enumerate(kpi_df.iterrows(), start=3):
         is_even = (r_i % 2 == 0)
-        for c_idx in range(1, 25):
+        for c_idx in range(1, total_cols + 1):
             cell = ws.cell(r_i, c_idx)
             val = row.iloc[c_idx - 1]
             cell.value = val
@@ -336,7 +351,7 @@ def export_age_sex_disaggregation_sheet(
                 cell.alignment = align_left if c_idx != 2 else align_center
             else:
                 cell.alignment = align_center
-                if c_idx in [10, 17, 24]:
+                if c_idx in total_col_indices:
                     cell.font = total_font
                 else:
                     cell.font = body_font
@@ -351,7 +366,7 @@ def export_age_sex_disaggregation_sheet(
         ws.cell(last_r, c).fill = fill_total
         ws.cell(last_r, c).border = thin_border
 
-    for c in range(4, 25):
+    for c in range(4, total_cols + 1):
         col_let = get_column_letter(c)
         cell = ws.cell(last_r, c, value=f"=SUM({col_let}3:{col_let}{last_r - 1})")
         cell.font = total_font

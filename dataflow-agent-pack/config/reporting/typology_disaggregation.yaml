@@ -1,0 +1,43 @@
+# Central Typology and Period Configuration for DATAFLOW Reporting
+# Controls typology-aware age/sex disaggregations and period-based reporting.
+
+typologies:
+  FSW:
+    sexes: ["F"]
+    age_groups: ["15-19", "20-24", "25+"]
+    include_total: true
+    expected_sex: "F"
+  MSM:
+    sexes: ["M"]
+    age_groups: ["15-19", "20-24", "25+"]
+    include_total: true
+    expected_sex: "M"
+  PWID:
+    sexes: ["M", "F"]
+    age_groups: ["15-19", "20-24", "25+"]
+    include_total: true
+    expected_sex: null
+  TG:
+    sexes: ["M", "F"]
+    age_groups: ["15-19", "20-24", "25+"]
+    include_total: true
+    expected_sex: null
+  VP:
+    sexes: ["M", "F"]
+    age_groups: ["15-19", "20-24", "25+"]
+    include_total: true
+    expected_sex: null
+
+periods:
+  Q1:
+    months: ["jul", "aug", "sep"]
+    description: "Quarter 1 (July - September)"
+    indicator_suffix: "_q1"
+  Q2:
+    months: ["oct", "nov", "dec"]
+    description: "Quarter 2 (October - December)"
+    indicator_suffix: "_q2"
+  SEM:
+    months: ["jul", "aug", "sep", "oct", "nov", "dec"]
+    description: "Semester (July - December)"
+    indicator_suffix: "_sem"

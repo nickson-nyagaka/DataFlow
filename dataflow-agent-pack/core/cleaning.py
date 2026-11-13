@@ -83,7 +83,7 @@ def parse_date_series(series: pd.Series) -> pd.Series:
     non_num = ~is_num
     dt_dayfirst = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[ns]")
     if non_num.any():
-        dt_dayfirst.update(pd.to_datetime(s_non_iso[non_num], dayfirst=True, errors="coerce"))
+        dt_dayfirst.update(pd.to_datetime(s_non_iso[non_num], dayfirst=True, errors="coerce", format="mixed"))
 
     combined_non_iso = dt_serials.combine_first(dt_dayfirst)
 

@@ -5,6 +5,9 @@ from __future__ import annotations
 import pandas as pd
 
 from core.compat import CompatSwitches
+from core.population_rules import (
+    get_typology_age_sex_labels,
+)
 
 
 def assign_age_groups(
@@ -77,18 +80,21 @@ def compute_age_group_counts(
 
 def compute_kpi_demographic_summary(
     df: pd.DataFrame,
+    population: str = "TG",
     period_mode: str = "Q1",
     compat: CompatSwitches | None = None,
 ) -> pd.DataFrame:
-    """Computes the 24-column KPI Indicators by Age and Sex table (notebook cell 84).
+    """Computes the typology-aware KPI Indicators by Age and Sex table.
 
     Indicators:
-    - DEFINED PACKAGE (definedpackage_q1 or definedpackage_sem)
-    - HTS (hts_q1 or hts_sem_any)
-    - PREP (prep_q1 or prep_sem)
+    - DEFINED PACKAGE (definedpackage_q1, definedpackage_q2, or definedpackage_sem)
+    - HTS (hts_q1, hts_q2, hts_sem_any / hts_sem)
+    - PREP (prep_q1, prep_q2, or prep_sem)
 
-    Disaggregated across 6 age x sex combinations:
-    15-19_M, 15-19_F, 20-24_M, 20-24_F, 25+_M, 25+_F, and Total per indicator.
+    Disaggregated across typology-specific age x sex combinations:
+    - FSW: 15-19_F, 20-24_F, 25+_F, and Total (15 columns total)
+    - MSM: 15-19_M, 20-24_M, 25+_M, and Total (15 columns total)
+    - PWID / TG / VP: 15-19_M, 15-19_F, 20-24_M, 20-24_F, 25+_M, 25+_F, and Total (24 columns total)
     Grouped by sr_name, region, county (uppercase).
     """
     if compat is None:
@@ -122,11 +128,11 @@ def compute_kpi_demographic_summary(
             .str.upper()
             .replace({"MALE": "M", "FEMALE": "F"})
         )
-        if compat and compat.legacy_impute_missing_sex_f:
+        if population.strip().upper() == "TG" and compat and compat.legacy_impute_missing_sex_f:
             sex_clean = sex_clean.fillna("F")
     else:
         sex_clean = pd.Series(
-            "F" if (compat and compat.legacy_impute_missing_sex_f) else "Unknown",
+            "F" if (population.strip().upper() == "TG" and compat and compat.legacy_impute_missing_sex_f) else "Unknown",
             index=kvp.index,
         )
 
@@ -158,14 +164,8 @@ def compute_kpi_demographic_summary(
         else:
             kvp[col] = "(MISSING)"
 
-    age_sex_order = [
-        "15-19_M",
-        "15-19_F",
-        "20-24_M",
-        "20-24_F",
-        "25+_M",
-        "25+_F",
-    ]
+    # Resolve typology-specific age x sex column ordering
+    age_sex_order = get_typology_age_sex_labels(population)
 
     block_tables = []
     for ind_col, block_name in indicator_map.items():

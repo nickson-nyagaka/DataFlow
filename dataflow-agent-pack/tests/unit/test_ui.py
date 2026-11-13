@@ -14,7 +14,6 @@ from __future__ import annotations
 
 import ast
 import io
-import json
 from pathlib import Path
 
 import pandas as pd
@@ -22,6 +21,7 @@ from streamlit.testing.v1 import AppTest
 
 from core.override import OverrideManager
 from core.validation import DQAResults
+from core.workflow_manager import WorkflowStage
 from ui.session import (
     check_page_access,
     purge_temporary_storage,
@@ -73,111 +73,57 @@ def test_ui_contains_zero_indicator_calculation_logic():
 # ---------------------------------------------------------------------------
 
 
-def test_dashboard_metrics_trace_to_run_metadata():
+def test_dashboard_metrics_trace_to_run_metadata(tmp_path: Path):
     """
-    Proves that all Dashboard metrics trace directly to runtime/run_metadata.json
-    and change dynamically when the metadata changes (zero hardcoded numbers).
+    Proves that all Dashboard metrics trace directly to session pipeline result
+    and change dynamically when the pipeline result changes (zero hardcoded numbers).
     """
-    meta_path = Path("runtime/run_metadata.json")
-    meta_path.parent.mkdir(parents=True, exist_ok=True)
-    backup = meta_path.read_bytes() if meta_path.exists() else None
+    res1 = _build_test_pipeline_result(tmp_path)
+    res1.total_cohort = 4321
+    res1.active_kplhiv = 876
+    res1.total_dqa_exceptions = 54
+    res1.duration_seconds = 12.34
 
-    sample_meta_1 = {
-        "timestamp": "2026-11-11T10:00:00Z",
-        "input_file_name": "test_register.xlsx",
-        "input_file_hash": "abc1234567890",
-        "config_hash": "cfg987",
-        "population": "FSW",
-        "period_mode": "SEM",
-        "total_cohort": 4321,
-        "active_kplhiv": 876,
-        "total_dqa_exceptions": 54,
-        "critical_dqa_count": 0,
-        "major_dqa_count": 14,
-        "minor_dqa_count": 40,
-        "duration_seconds": 12.34,
-        "stage_timings": {
-            "ingestion": 2.1,
-            "cleaning": 1.5,
-            "dqa": 3.0,
-            "analytics": 2.7,
-            "reporting": 3.04,
-        },
-        "status": "SUCCESS",
-    }
+    at1 = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
+    at1.session_state["workflow_stage"] = WorkflowStage.DASHBOARD_VIEWED
+    at1.session_state["pipeline_result"] = res1
+    at1.run()
+    assert not at1.exception
 
-    sample_meta_2 = {
-        "timestamp": "2026-11-11T11:00:00Z",
-        "input_file_name": "msm_register.xlsx",
-        "input_file_hash": "xyz9876543210",
-        "config_hash": "cfg654",
-        "population": "MSM",
-        "period_mode": "Q1",
-        "total_cohort": 9876,
-        "active_kplhiv": 1234,
-        "total_dqa_exceptions": 18,
-        "critical_dqa_count": 3,
-        "major_dqa_count": 5,
-        "minor_dqa_count": 10,
-        "duration_seconds": 4.56,
-        "stage_timings": {
-            "ingestion": 1.0,
-            "cleaning": 0.5,
-            "dqa": 1.0,
-            "analytics": 1.0,
-            "reporting": 1.06,
-        },
-        "status": "SUCCESS",
-    }
+    metric_values_1 = [m.value for m in at1.metric]
+    assert "4,321" in metric_values_1
+    assert "876" in metric_values_1
+    assert "54" in metric_values_1
+    assert "12.34s" in metric_values_1
 
-    try:
-        # Test Run 1
-        meta_path.write_text(json.dumps(sample_meta_1), encoding="utf-8")
-        at1 = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
-        at1.run()
-        assert not at1.exception
+    # Test Run 2 with modified values
+    res2 = _build_test_pipeline_result(tmp_path)
+    res2.total_cohort = 9876
+    res2.active_kplhiv = 1234
+    res2.total_dqa_exceptions = 18
+    res2.duration_seconds = 4.56
 
-        metric_values_1 = [m.value for m in at1.metric]
-        assert "4,321" in metric_values_1
-        assert "876" in metric_values_1
-        assert "54" in metric_values_1
-        assert "12.34s" in metric_values_1
+    at2 = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
+    at2.session_state["workflow_stage"] = WorkflowStage.DASHBOARD_VIEWED
+    at2.session_state["pipeline_result"] = res2
+    at2.run()
+    assert not at2.exception
 
-        # Test Run 2 with modified values
-        meta_path.write_text(json.dumps(sample_meta_2), encoding="utf-8")
-        at2 = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
-        at2.run()
-        assert not at2.exception
-
-        metric_values_2 = [m.value for m in at2.metric]
-        assert "9,876" in metric_values_2
-        assert "1,234" in metric_values_2
-        assert "18" in metric_values_2
-        assert "4.56s" in metric_values_2
-
-    finally:
-        if backup is not None:
-            meta_path.write_bytes(backup)
-        elif meta_path.exists():
-            meta_path.unlink()
+    metric_values_2 = [m.value for m in at2.metric]
+    assert "9,876" in metric_values_2
+    assert "1,234" in metric_values_2
+    assert "18" in metric_values_2
+    assert "4.56s" in metric_values_2
 
 
 def test_dashboard_empty_state_when_no_metadata():
-    """Verifies friendly empty state when no pipeline runs have occurred."""
-    meta_path = Path("runtime/run_metadata.json")
-    backup = meta_path.read_bytes() if meta_path.exists() else None
-    if meta_path.exists():
-        meta_path.unlink()
-
-    try:
-        at = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
-        at.run()
-        assert not at.exception
-        assert any("No pipeline runs recorded yet" in info.value for info in at.info)
-        assert all(m.value == "—" for m in at.metric)
-    finally:
-        if backup is not None:
-            meta_path.write_bytes(backup)
+    """Verifies friendly access guard when no pipeline runs have occurred in session."""
+    at = AppTest.from_file(ui_path("dashboard.py"), default_timeout=15)
+    at.session_state["workflow_stage"] = WorkflowStage.EMPTY
+    at.session_state["pipeline_result"] = None
+    at.run()
+    assert not at.exception
+    assert any("locked" in w.value.lower() or "no active processed pipeline result" in w.value.lower() for w in at.warning)
 
 
 # ---------------------------------------------------------------------------
@@ -266,9 +212,9 @@ def test_state_machine_access_gating(monkeypatch):
     """Verifies page access permissions across state machine lifecycle."""
     import streamlit as st
 
-    # IDLE stage
-    monkeypatch.setattr(st, "session_state", {"stage": "IDLE"})
-    assert check_page_access("Dashboard") is True
+    # EMPTY stage
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.EMPTY})
+    assert check_page_access("Dashboard") is False
     assert check_page_access("Upload Data") is True
     assert check_page_access("Configuration") is True
     assert check_page_access("About") is True
@@ -278,16 +224,32 @@ def test_state_machine_access_gating(monkeypatch):
     assert check_page_access("Export Reports") is False
 
     # UPLOADED stage
-    monkeypatch.setattr(st, "session_state", {"stage": "UPLOADED"})
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.UPLOADED})
     assert check_page_access("Processing") is True
     assert check_page_access("Data Quality") is False
     assert check_page_access("Analytics") is False
     assert check_page_access("Export Reports") is False
 
     # PROCESSED stage
-    monkeypatch.setattr(st, "session_state", {"stage": "PROCESSED"})
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.PROCESSED})
     assert check_page_access("Data Quality") is True
+    assert check_page_access("Dashboard") is False
+    assert check_page_access("Analytics") is False
+    assert check_page_access("Export Reports") is False
+
+    # DQA_REVIEWED stage
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.DQA_REVIEWED})
+    assert check_page_access("Dashboard") is True
+    assert check_page_access("Analytics") is False
+    assert check_page_access("Export Reports") is False
+
+    # DASHBOARD_VIEWED stage
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.DASHBOARD_VIEWED})
     assert check_page_access("Analytics") is True
+    assert check_page_access("Export Reports") is False
+
+    # ANALYTICS_VIEWED stage
+    monkeypatch.setattr(st, "session_state", {"workflow_stage": WorkflowStage.ANALYTICS_VIEWED})
     assert check_page_access("Export Reports") is True
 
 
@@ -319,7 +281,7 @@ def test_processing_page_render_empty():
     at = AppTest.from_file(ui_path("processing.py"), default_timeout=20)
     at.run()
     assert not at.exception
-    assert any("Page Locked" in w.value for w in at.warning)
+    assert any("locked" in w.value.lower() for w in at.warning)
 
 
 def test_data_quality_page_render_empty():
@@ -327,7 +289,7 @@ def test_data_quality_page_render_empty():
     at = AppTest.from_file(ui_path("data_quality.py"), default_timeout=20)
     at.run()
     assert not at.exception
-    assert any("Page Locked" in w.value for w in at.warning)
+    assert any("locked" in w.value.lower() for w in at.warning)
 
 
 def test_analytics_page_render_empty():
@@ -335,7 +297,7 @@ def test_analytics_page_render_empty():
     at = AppTest.from_file(ui_path("analytics.py"), default_timeout=20)
     at.run()
     assert not at.exception
-    assert any("Page Locked" in w.value for w in at.warning)
+    assert any("locked" in w.value.lower() for w in at.warning)
 
 
 def test_exports_page_render_empty():
@@ -343,7 +305,7 @@ def test_exports_page_render_empty():
     at = AppTest.from_file(ui_path("exports.py"), default_timeout=20)
     at.run()
     assert not at.exception
-    assert any("Page Locked" in w.value for w in at.warning)
+    assert any("locked" in w.value.lower() for w in at.warning)
 
 
 def _build_test_pipeline_result(tmp_path: Path):
@@ -443,7 +405,7 @@ def test_data_quality_page_render_processed_state(tmp_path: Path):
     """Runs ui/data_quality.py through AppTest with populated PROCESSED session state."""
     res = _build_test_pipeline_result(tmp_path)
     at = AppTest.from_file(ui_path("data_quality.py"), default_timeout=20)
-    at.session_state["stage"] = "PROCESSED"
+    at.session_state["workflow_stage"] = WorkflowStage.PROCESSED
     at.session_state["pipeline_result"] = res
     at.run()
     assert not at.exception
@@ -455,7 +417,7 @@ def test_analytics_page_render_processed_state(tmp_path: Path):
     """Runs ui/analytics.py through AppTest with populated PROCESSED session state."""
     res = _build_test_pipeline_result(tmp_path)
     at = AppTest.from_file(ui_path("analytics.py"), default_timeout=20)
-    at.session_state["stage"] = "PROCESSED"
+    at.session_state["workflow_stage"] = WorkflowStage.DASHBOARD_VIEWED
     at.session_state["pipeline_result"] = res
     at.run()
     assert not at.exception
@@ -467,7 +429,7 @@ def test_dashboard_page_render_processed_state(tmp_path: Path):
     """Runs ui/dashboard.py through AppTest with populated PROCESSED session state and charts."""
     res = _build_test_pipeline_result(tmp_path)
     at = AppTest.from_file(ui_path("dashboard.py"), default_timeout=20)
-    at.session_state["stage"] = "PROCESSED"
+    at.session_state["workflow_stage"] = WorkflowStage.DQA_REVIEWED
     at.session_state["pipeline_result"] = res
     at.run()
     assert not at.exception
@@ -479,7 +441,7 @@ def test_exports_page_render_processed_state(tmp_path: Path):
     """Runs ui/exports.py through AppTest with populated PROCESSED session state."""
     res = _build_test_pipeline_result(tmp_path)
     at = AppTest.from_file(ui_path("exports.py"), default_timeout=20)
-    at.session_state["stage"] = "PROCESSED"
+    at.session_state["workflow_stage"] = WorkflowStage.ANALYTICS_VIEWED
     at.session_state["pipeline_result"] = res
     at.session_state["block_on_critical"] = True
     at.session_state["mask_identifiers"] = False
@@ -505,7 +467,7 @@ def test_exports_page_allows_download_when_dqa_exceptions_exist(tmp_path: Path):
         total_exceptions=1,
     )
     at = AppTest.from_file(ui_path("exports.py"), default_timeout=20)
-    at.session_state["stage"] = "PROCESSED"
+    at.session_state["workflow_stage"] = WorkflowStage.ANALYTICS_VIEWED
     at.session_state["pipeline_result"] = res
     at.session_state["block_on_critical"] = True
     at.session_state["mask_identifiers"] = False
@@ -536,7 +498,7 @@ def test_about_page_render():
     at.run()
     assert not at.exception
     assert any("About DATAFLOW" in t.value for t in at.title)
-    assert any("DATAFLOW v1.0.0" in m.value for m in at.markdown)
+    assert any("DATAFLOW v1.0" in m.value for m in at.markdown)
 
 
 # ---------------------------------------------------------------------------

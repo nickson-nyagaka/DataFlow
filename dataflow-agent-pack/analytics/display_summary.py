@@ -10,6 +10,7 @@ Strictly adheres to Master Brief §11 and Decisions D-040/D-041:
 from __future__ import annotations
 
 from typing import Any
+
 import pandas as pd
 
 

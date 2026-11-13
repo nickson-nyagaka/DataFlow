@@ -230,3 +230,102 @@ layouts:
       - group: "NSP"
         subheaders: ["Q1", "TOTQ1"]
         columns: ["NSP_Q1", "total_nsp_Q1"]
+
+  q2_standard:
+    blocks:
+      - group: "COUNTY"
+        subheaders: ["COUNTY"]
+        columns: ["county"]
+      - group: "SR NAME"
+        subheaders: ["SR NAME"]
+        columns: ["sr_name"]
+      - group: "REGION"
+        subheaders: ["REGION"]
+        columns: ["region"]
+      - group: "AGE GROUP"
+        subheaders: ["15-19", "20-24", "25+", "Below 15"]
+        columns: ["15-19", "20-24", "25+", "Below 15"]
+      - group: "TOTAL"
+        subheaders: ["COHORT", "PE"]
+        columns: ["TotalCohort", "TotalPE"]
+      - group: "HIV TESTING & PLHIV"
+        subheaders: ["Q2", "NEGQ2", "POSQ2", "Total_KPLHIV", "Suppressed"]
+        columns: ["HTSQ2", "HTS_Negative_Q2", "HTS_Positive_Q2", "Total_KPLHIV", "Suppressed"]
+      - group: "DEFINED PACKAGE"
+        subheaders: ["Q2"]
+        columns: ["DefinedPackage_Q2"]
+      - group: "PREP "
+        subheaders: ["Q2"]
+        columns: ["PREP_Q2"]
+      - group: "ART"
+        subheaders: ["NEWQ2", "CURRENTQ2"]
+        columns: ["New_on_ART_Q2", "CurrentArt_Q2"]
+      - group: "STI SCREENING"
+        subheaders: ["Q2"]
+        columns: ["STISCREENEDQ_2"]
+      - group: "STI DIAGNOSIS"
+        subheaders: ["Q2"]
+        columns: ["STI_DIAGNOSED_Q2"]
+      - group: "STI TREATMENT"
+        subheaders: ["Q2"]
+        columns: ["STI_TREATED_Q2"]
+      - group: "TB SCREENING"
+        subheaders: ["Q2"]
+        columns: ["TB_SCREENED_Q2"]
+      - group: "PEER EDUCATION"
+        subheaders: ["Q2"]
+        columns: ["PeerEducation_Q2"]
+      - group: "CONDOMS"
+        subheaders: ["Q2", "TOTQ2"]
+        columns: ["ReceivedCondom_Q2", "total_condoms_Q2"]
+
+  q2_pwid:
+    blocks:
+      - group: "COUNTY"
+        subheaders: ["COUNTY"]
+        columns: ["county"]
+      - group: "SR NAME"
+        subheaders: ["SR NAME"]
+        columns: ["sr_name"]
+      - group: "REGION"
+        subheaders: ["REGION"]
+        columns: ["region"]
+      - group: "AGE GROUP"
+        subheaders: ["15-19", "20-24", "25+", "Below 15"]
+        columns: ["15-19", "20-24", "25+", "Below 15"]
+      - group: "TOTAL"
+        subheaders: ["COHORT", "PE"]
+        columns: ["TotalCohort", "TotalPE"]
+      - group: "HIV TESTING & PLHIV"
+        subheaders: ["Q2", "NEGQ2", "POSQ2", "Total_KPLHIV", "Suppressed"]
+        columns: ["HTSQ2", "HTS_Negative_Q2", "HTS_Positive_Q2", "Total_KPLHIV", "Suppressed"]
+      - group: "DEFINED PACKAGE"
+        subheaders: ["Q2"]
+        columns: ["DefinedPackage_Q2"]
+      - group: "PREP "
+        subheaders: ["Q2"]
+        columns: ["PREP_Q2"]
+      - group: "ART"
+        subheaders: ["NEWQ2", "CURRENTQ2"]
+        columns: ["New_on_ART_Q2", "CurrentArt_Q2"]
+      - group: "STI SCREENING"
+        subheaders: ["Q2"]
+        columns: ["STISCREENEDQ_2"]
+      - group: "STI DIAGNOSIS"
+        subheaders: ["Q2"]
+        columns: ["STI_DIAGNOSED_Q2"]
+      - group: "STI TREATMENT"
+        subheaders: ["Q2"]
+        columns: ["STI_TREATED_Q2"]
+      - group: "TB SCREENING"
+        subheaders: ["Q2"]
+        columns: ["TB_SCREENED_Q2"]
+      - group: "PEER EDUCATION"
+        subheaders: ["Q2"]
+        columns: ["PeerEducation_Q2"]
+      - group: "CONDOMS"
+        subheaders: ["Q2", "TOTQ2"]
+        columns: ["ReceivedCondom_Q2", "total_condoms_Q2"]
+      - group: "NSP"
+        subheaders: ["Q2", "TOTQ2"]
+        columns: ["NSP_Q2", "total_nsp_Q2"]

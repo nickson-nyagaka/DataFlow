@@ -15,7 +15,8 @@ from pathlib import Path
 import streamlit as st
 
 from core.override import OverrideManager
-from ui.session import render_access_guard
+from core.workflow_manager import WorkflowStage
+from ui.session import advance_workflow_stage, render_access_guard
 
 
 def render_exports() -> None:
@@ -31,6 +32,8 @@ def render_exports() -> None:
     if not result:
         st.warning("No pipeline results available. Please run processing first.")
         return
+
+    advance_workflow_stage(WorkflowStage.EXPORT_READY)
 
     override_mgr: OverrideManager = st.session_state.get("override_manager")
     if override_mgr is None:
@@ -95,8 +98,54 @@ def render_exports() -> None:
             icon="✅",
         )
 
-    # 3. Download Options
-    st.subheader("1. Primary Export Packages")
+    # 3. Period Selection & Reporting Package Overview
+    st.subheader("1. Reporting Period & Package Overview")
+    col_per_sel, col_stat1, col_stat2, col_stat3 = st.columns([2, 1, 1, 1])
+
+    current_period = result.period_mode.upper() if result.period_mode else "SEM"
+    period_options = ["SEM", "Q1", "Q2"]
+    default_idx = period_options.index(current_period) if current_period in period_options else 0
+
+    with col_per_sel:
+        selected_period = st.selectbox(
+            "Target Reporting Period",
+            options=period_options,
+            index=default_idx,
+            key="ui_export_period_selector",
+            help="Choose SEM (Full Semester, Jul-Dec), Q1 (Quarter 1, Jul-Sep), or Q2 (Quarter 2, Oct-Dec).",
+        )
+
+    with col_stat1:
+        st.metric("Population", result.population)
+    with col_stat2:
+        st.metric("Period", selected_period)
+    with col_stat3:
+        st.metric("Cohort Records", f"{result.total_cohort:,}")
+
+    # Re-run pipeline if user changed period from the active result
+    if selected_period != current_period:
+        with st.spinner(f"Re-generating analytics and reporting packages for {result.population} ({selected_period})..."):
+            from core.runner import run_full_pipeline
+            file_bytes = st.session_state.get("uploaded_file_bytes")
+            file_name = st.session_state.get("uploaded_file_name", f"cohort_{result.population.lower()}.xlsx")
+            new_result = run_full_pipeline(
+                file_source=file_bytes if file_bytes else file_name,
+                file_name=file_name,
+                population=result.population,
+                period_mode=selected_period,
+                mask_identifiers=mask_ident,
+                force_rerun=False,
+            )
+            st.session_state["pipeline_result"] = new_result
+            st.session_state["period_mode"] = selected_period
+            st.rerun()
+
+    st.divider()
+
+    st.success("🎉 **Ready for Export:** Your reporting package has been successfully generated.", icon="🎉")
+
+    # 4. Download Options
+    st.subheader("2. Primary Export Packages")
 
     master_path = result.package_paths.get("master_workbook")
     zip_path = result.package_paths.get("zip_package")
@@ -145,8 +194,8 @@ def render_exports() -> None:
 
     st.divider()
 
-    # 4. Individual Component Downloads (Always available for DQA / Remediation / Reporting)
-    st.subheader("2. Individual Component Downloads")
+    # 5. Individual Component Downloads (Always available for DQA / Remediation / Reporting)
+    st.subheader("3. Individual Component Downloads")
     st.caption("Individual workbooks and audit trails for targeted facility review.")
 
     c1, c2 = st.columns(2)

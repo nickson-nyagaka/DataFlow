@@ -271,6 +271,7 @@ def build_reporting_package(
         master_wb,
         kpi_tab_name,
         cleaned_register,
+        population=pop_str,
         period_mode=period_str,
         config=manager,
     )
@@ -327,13 +328,18 @@ def build_reporting_package(
     # Standalone Age x Sex Disaggregation workbook per D-039
     disagg_path: Path | None = None
     if period_str in ["SEM", "Q1", "Q2"]:
-        disagg_path = out_dir / f"04_Age_Sex_Disaggregation_{pop_str}.xlsx"
+        disagg_path = out_dir / f"04_Age_Sex_Disaggregation_{pop_str}_{period_str}.xlsx"
         disagg_wb = openpyxl.Workbook()
         if disagg_wb.active is not None:
             disagg_wb.remove(disagg_wb.active)
         disagg_sheet_name = "KPI" if pop_str == "TG" else "Age_Sex_Disaggregation"
         export_age_sex_disaggregation_sheet(
-            disagg_wb, disagg_sheet_name, cleaned_register, period_mode=period_str, config=manager
+            disagg_wb,
+            disagg_sheet_name,
+            cleaned_register,
+            population=pop_str,
+            period_mode=period_str,
+            config=manager,
         )
         disagg_wb.save(disagg_path)
         disagg_wb.close()

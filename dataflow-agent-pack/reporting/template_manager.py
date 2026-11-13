@@ -105,6 +105,8 @@ class ExcelTemplateConfig:
 
         if mode == "Q1":
             layout_key = "q1_pwid" if pop == "PWID" else "q1_standard"
+        elif mode == "Q2":
+            layout_key = "q2_pwid" if pop == "PWID" else "q2_standard"
         else:
             layout_key = "semester_pwid" if pop == "PWID" else "semester_standard"
 
@@ -117,7 +119,7 @@ class ExcelTemplateConfig:
 
         if pop == "PWID":
             return "PWID_Summary"
-        if mode == "Q1":
+        if mode in ("Q1", "Q2"):
             return "KP_Summary"
         return "Summary"
 

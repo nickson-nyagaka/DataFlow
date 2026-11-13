@@ -24,7 +24,7 @@ def render_about() -> None:
 
     st.markdown(
         """
-        ### DATAFLOW v1.0.0
+        ### DATAFLOW v1.0.2
         **DATAFLOW** is an automated, local, privacy-preserving data management and analytical pipeline
         engineered to convert Kenyan Key Population cohort registers (FSW, MSM, PWID, TG, VP) and KPLHIV workbooks
         into verified data structures, DQA exception workbooks, and standardized multi-tab Excel reporting packages.

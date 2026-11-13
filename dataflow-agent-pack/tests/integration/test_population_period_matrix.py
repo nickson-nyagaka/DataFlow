@@ -70,10 +70,14 @@ def test_full_pipeline_population_period_matrix(population: str, period_mode: st
     master_path = result.package_paths.get("master_workbook")
     zip_path = result.package_paths.get("zip_package")
     sum_path = result.package_paths.get("summary_workbook")
+    disagg_path = result.package_paths.get("disaggregation_workbook")
 
     assert master_path is not None and master_path.exists()
     assert zip_path is not None and zip_path.exists()
     assert sum_path is not None and sum_path.exists()
+    assert disagg_path is not None and disagg_path.exists()
+    assert f"01_Summary_{population}_{period_mode}.xlsx" in sum_path.name
+    assert f"04_Age_Sex_Disaggregation_{population}_{period_mode}.xlsx" in disagg_path.name
 
     # 5. Programmatic workbook validation (formatting, SUM formulas, visual tokens)
     val_res = validate_summary_workbook(
@@ -82,6 +86,20 @@ def test_full_pipeline_population_period_matrix(population: str, period_mode: st
         period_mode=period_mode,
     )
     assert val_res.is_valid is True, f"Validation errors: {val_res.issues}"
+
+    # Verify KPI Disaggregation sheet columns: 15 for FSW/MSM, 24 for PWID/TG/VP
+    wb_disagg = openpyxl.load_workbook(disagg_path, data_only=True)
+    ws_kpi = wb_disagg.active
+    if population in ["FSW", "MSM"]:
+        assert ws_kpi.max_column == 15, f"{population} KPI sheet must have 15 columns, got {ws_kpi.max_column}"
+        if population == "FSW":
+            assert ws_kpi.cell(2, 4).value == "15-19_F"
+        else:
+            assert ws_kpi.cell(2, 4).value == "15-19_M"
+    else:
+        assert ws_kpi.max_column == 24, f"{population} KPI sheet must have 24 columns, got {ws_kpi.max_column}"
+        assert ws_kpi.cell(2, 4).value == "15-19_M"
+        assert ws_kpi.cell(2, 5).value == "15-19_F"
 
     # Verify master workbook contains expected core sheets (Run Metadata & Cleaning Log removed)
     wb_master = openpyxl.load_workbook(master_path, data_only=True)

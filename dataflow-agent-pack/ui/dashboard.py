@@ -21,10 +21,11 @@ if sys.path and sys.path[0] != _ROOT:
         sys.path.remove(_ROOT)
     sys.path.insert(0, _ROOT)
 
-import pandas as pd
-import streamlit as st
+import pandas as pd  # noqa: E402
+import streamlit as st  # noqa: E402
 
-from core.runner import read_latest_run_metadata
+from core.workflow_manager import WorkflowStage  # noqa: E402
+from ui.session import advance_workflow_stage, render_access_guard  # noqa: E402
 
 
 def render_dashboard() -> None:
@@ -33,58 +34,32 @@ def render_dashboard() -> None:
         "Executive overview of cohort ingestion, quality assurance, and key population metrics."
     )
 
-    # 1. Retrieve session pipeline result if active, or fall back to persisted metadata
-    res = st.session_state.get("pipeline_result")
-    meta = read_latest_run_metadata()
-
-    if not res and not meta:
-        st.info(
-            "ℹ️ **No pipeline runs recorded yet.** "
-            "Navigate to **Upload Data** in the sidebar to upload and process a Key Population cohort register.",
-            icon="ℹ️",
-        )
-        col1, col2, col3, col4 = st.columns(4)
-        col1.metric(label="Total Cohort", value="—")
-        col2.metric(label="Active KPLHIV", value="—")
-        col3.metric(label="DQA Exceptions", value="—")
-        col4.metric(label="Run Duration", value="—")
+    if not render_access_guard("Dashboard"):
         return
 
-    # Extract primary metrics (guarantee traceability to run_metadata for test compliance)
-    if meta:
-        total_cohort = meta.get("total_cohort", 0)
-        active_kplhiv = meta.get("active_kplhiv", 0)
-        total_dqa = meta.get("total_dqa_exceptions", 0)
-        duration = meta.get("duration_seconds", 0.0)
-        crit_count = meta.get("critical_dqa_count", 0)
-        major_count = meta.get("major_dqa_count", 0)
-        minor_count = meta.get("minor_dqa_count", 0)
-        population = meta.get("population", "N/A")
-        period_mode = meta.get("period_mode", "N/A")
-        file_name = meta.get("input_file_name", "N/A")
-        file_hash = meta.get("input_file_hash", "N/A")
-        ts = meta.get("timestamp", "N/A")
-        timings = meta.get("stage_timings", {})
-        disp = meta.get("display_analytics", {})
-    else:
-        total_cohort = res.total_cohort
-        active_kplhiv = res.active_kplhiv
-        total_dqa = res.total_dqa_exceptions
-        duration = res.duration_seconds
-        crit_count = res.critical_dqa_count
-        major_count = res.major_dqa_count
-        minor_count = res.minor_dqa_count
-        population = res.population
-        period_mode = res.period_mode
-        file_name = res.input_file_name
-        file_hash = res.input_file_hash
-        ts = res.timestamp
-        timings = res.stage_timings
-        disp = res.display_analytics
+    # 1. Retrieve session pipeline result (active session strictly prioritized per §12.1)
+    res = st.session_state.get("pipeline_result")
+    if not res:
+        st.warning("No active processed pipeline result found in this session.")
+        return
 
-    # If live session result exists, prefer its display_analytics for live dataframes
-    if res and res.display_analytics:
-        disp = res.display_analytics
+    # Record dashboard viewed in session
+    st.session_state["dashboard_viewed"] = True
+
+    total_cohort = res.total_cohort
+    active_kplhiv = res.active_kplhiv
+    total_dqa = res.total_dqa_exceptions
+    duration = res.duration_seconds
+    crit_count = res.critical_dqa_count
+    major_count = res.major_dqa_count
+    minor_count = res.minor_dqa_count
+    population = res.population
+    period_mode = res.period_mode
+    file_name = res.input_file_name
+    file_hash = res.input_file_hash
+    ts = res.timestamp
+    timings = res.stage_timings
+    disp = res.display_analytics
 
     # Metric Cards (Guaranteed identical structure and labels for exit criteria compliance)
     col1, col2, col3, col4 = st.columns(4)
@@ -369,6 +344,19 @@ def render_dashboard() -> None:
                     st.write(f"• **{stage.title()}:** `{sec:.3f}s`")
             else:
                 st.write("No granular timings recorded.")
+
+    # 6. Workflow Progression: Continue to Analytics per Master Brief §12
+    st.divider()
+    st.subheader("🏁 Next Workflow Step")
+    st.caption("Proceed to deep-dive analytics and indicator disaggregations.")
+
+    col_inf, col_btn = st.columns([2, 1])
+    with col_inf:
+        st.info("ℹ️ Proceed to inspect cascade breakdowns and facility-level summaries.")
+    with col_btn:
+        if st.button("📈 Proceed to Analytics ➡️", type="primary", use_container_width=True):
+            advance_workflow_stage(WorkflowStage.DASHBOARD_VIEWED)
+            st.switch_page("ui/analytics.py")
 
 
 render_dashboard()

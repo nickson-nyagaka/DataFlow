@@ -86,6 +86,9 @@ def test_zero_analytics_code_outside_oracle():
             "diagnostics.py",
             "template_schema.py",
             "template_validator.py",
+            "population_rules.py",
+            "progress_manager.py",
+            "workflow_manager.py",
         }
     existing_core_files = {f.name for f in core_dir.glob("*.py")}
     disallowed_core = existing_core_files - allowed_core_files

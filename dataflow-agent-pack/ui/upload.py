@@ -16,7 +16,8 @@ import openpyxl
 import streamlit as st
 
 from core.runner import compute_file_hash
-from ui.session import render_access_guard
+from core.workflow_manager import WorkflowStage
+from ui.session import advance_workflow_stage, render_access_guard
 
 VALID_EXTENSIONS = {".xlsx", ".xls", ".xlsb", ".csv"}
 POPULATIONS = ["FSW", "MSM", "PWID", "TG", "VP"]
@@ -177,7 +178,7 @@ def render_upload() -> None:
             st.session_state["uploaded_file_bytes"] = file_bytes
             st.session_state["population"] = population
             st.session_state["period_mode"] = period_mode
-            st.session_state["stage"] = "UPLOADED"
+            advance_workflow_stage(WorkflowStage.UPLOADED)
             st.session_state["error_message"] = None
 
             # Pre-Processing Template Concordance Audit
@@ -210,8 +211,8 @@ def render_upload() -> None:
                 st.markdown(template_report.summary_markdown())
 
             if st.button("🚀 Proceed to Processing", type="primary", use_container_width=True):
-                st.session_state["active_page"] = "Processing"
-                st.rerun()
+                advance_workflow_stage(WorkflowStage.PROCESSING)
+                st.switch_page("ui/processing.py")
 
 
 render_upload()
