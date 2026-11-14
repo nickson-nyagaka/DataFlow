@@ -1,383 +1,335 @@
 {
-  "timestamp": "2026-11-13T10:04:49.878875+00:00",
-  "input_file_name": "synthetic_fsw.xlsx",
-  "input_file_hash": "a28e6148046f1178f647c79c9844335688235133c9886e721f4486879c8caaca",
-  "config_hash": "ca0caaa7401aedb5",
-  "population": "FSW",
-  "period_mode": "SEM",
-  "total_cohort": 203,
-  "active_kplhiv": 40,
-  "total_dqa_exceptions": 30,
-  "critical_dqa_count": 15,
-  "major_dqa_count": 15,
+  "timestamp": "2026-11-14T14:26:06.560095+00:00",
+  "input_file_name": "Consolidated TG.xlsb",
+  "input_file_hash": "ef0d1d4cc9083b0ba44d2f7a951bfa8d46881232a016ab58b4b691b417867949",
+  "config_hash": "65e54e14f64ad2b7",
+  "population": "TG",
+  "period_mode": "Q1",
+  "total_cohort": 3124,
+  "active_kplhiv": 100,
+  "total_dqa_exceptions": 5,
+  "critical_dqa_count": 3,
+  "major_dqa_count": 2,
   "minor_dqa_count": 0,
-  "duration_seconds": 6.335,
+  "duration_seconds": 12.873,
   "stage_timings": {
-    "ingestion": 0.534,
-    "cleaning": 0.39,
-    "dqa": 1.621,
-    "analytics": 1.243,
-    "reporting": 2.533
+    "ingestion": 2.243,
+    "cleaning": 2.056,
+    "dqa": 1.671,
+    "analytics": 1.726,
+    "reporting": 5.095
   },
   "display_analytics": {
     "executive_metrics": {
-      "total_cohort": 203,
-      "defined_package": 85,
-      "defined_package_rate": 41.9,
-      "hts_tested": 163,
-      "testing_rate": 80.3,
-      "hts_positive": 4,
-      "hts_positivity_rate": 2.45,
-      "prep_active": 56,
-      "active_kplhiv": 40,
-      "current_on_art": 40,
-      "viral_load_done": 40,
-      "virally_suppressed": 18,
-      "suppression_rate": 45.0,
+      "total_cohort": 3124,
+      "defined_package": 3051,
+      "defined_package_rate": 97.7,
+      "hts_tested": 2967,
+      "testing_rate": 95.0,
+      "hts_positive": 0,
+      "hts_positivity_rate": 0.0,
+      "prep_active": 1616,
+      "active_kplhiv": 100,
+      "current_on_art": 110,
+      "viral_load_done": 100,
+      "virally_suppressed": 71,
+      "suppression_rate": 71.0,
       "sti_treatment_rate": 100.0
     },
     "hts_cascade": {
-      "Tested": 163,
-      "Negative": 163,
-      "Positive": 4,
-      "Linked to ART": 4
+      "Tested": 2967,
+      "Negative": 2967,
+      "Positive": 0,
+      "Linked to ART": 0
     },
     "prep_cascade": {
-      "Active on PrEP": 56,
-      "Initiated (New)": 2,
-      "Refills / Continuing": 54,
-      "Discontinued": 0
+      "Active on PrEP": 1616,
+      "Initiated (New)": 146,
+      "Refills / Continuing": 948,
+      "Discontinued": 348
     },
     "art_cascade": {
-      "Active KPLHIV": 40,
-      "On ART": 40,
-      "Viral Load Done": 40,
-      "Suppressed (<1000 cp/ml)": 18
+      "Active KPLHIV": 100,
+      "On ART": 110,
+      "Viral Load Done": 100,
+      "Suppressed (<1000 cp/ml)": 71
     },
     "clinical_cascade": {
-      "STI Screened": 102,
-      "STI Diagnosed": 2,
-      "STI Treated": 2,
-      "TB Screened": 102
+      "STI Screened": 3058,
+      "STI Diagnosed": 16,
+      "STI Treated": 16,
+      "TB Screened": 3058
     },
     "commodities": {
-      "Male Condoms": 17894,
-      "Clients Receiving Condoms": 103,
-      "Lubricants Distributed": 0,
-      "Peer Education Reached": 152
+      "Male Condoms": 72472,
+      "Clients Receiving Condoms": 3122,
+      "Lubricants Distributed": 32136,
+      "Peer Education Reached": 3124
     },
     "demographics": {
-      "Below 15": 5,
-      "15\u201319": 17,
-      "20\u201324": 28,
-      "25+": 153
+      "Below 15": 0,
+      "15\u201319": 33,
+      "20\u201324": 984,
+      "25+": 2107
     },
     "geography_summary": [
       {
-        "County": "Kilifi",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast",
-        "Cohort": 13,
-        "Defined Package": 9,
-        "HTS Tested": 12,
-        "PrEP Active": 5,
-        "Active KPLHIV": 1,
-        "Suppressed": 0
-      },
-      {
-        "County": "Kilifi",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast",
-        "Cohort": 7,
-        "Defined Package": 4,
-        "HTS Tested": 7,
-        "PrEP Active": 1,
-        "Active KPLHIV": 0,
-        "Suppressed": 0
-      },
-      {
-        "County": "Kilifi",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast",
-        "Cohort": 14,
-        "Defined Package": 5,
-        "HTS Tested": 11,
-        "PrEP Active": 3,
-        "Active KPLHIV": 3,
-        "Suppressed": 1
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Alpha",
-        "Region": "Western",
-        "Cohort": 16,
-        "Defined Package": 8,
-        "HTS Tested": 13,
-        "PrEP Active": 5,
-        "Active KPLHIV": 3,
-        "Suppressed": 1
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Beta",
-        "Region": "Western",
-        "Cohort": 7,
-        "Defined Package": 2,
-        "HTS Tested": 6,
-        "PrEP Active": 3,
-        "Active KPLHIV": 1,
-        "Suppressed": 0
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Gamma",
-        "Region": "Western",
-        "Cohort": 14,
-        "Defined Package": 9,
-        "HTS Tested": 12,
-        "PrEP Active": 4,
-        "Active KPLHIV": 2,
-        "Suppressed": 0
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast",
-        "Cohort": 12,
-        "Defined Package": 3,
-        "HTS Tested": 10,
-        "PrEP Active": 2,
-        "Active KPLHIV": 2,
-        "Suppressed": 0
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast",
-        "Cohort": 12,
-        "Defined Package": 4,
-        "HTS Tested": 11,
-        "PrEP Active": 2,
-        "Active KPLHIV": 3,
-        "Suppressed": 2
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast",
-        "Cohort": 12,
-        "Defined Package": 4,
-        "HTS Tested": 10,
-        "PrEP Active": 4,
-        "Active KPLHIV": 2,
-        "Suppressed": 1
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Unknown",
-        "Region": "Coast",
-        "Cohort": 1,
-        "Defined Package": 0,
-        "HTS Tested": 0,
-        "PrEP Active": 0,
-        "Active KPLHIV": 0,
-        "Suppressed": 0
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast",
-        "Cohort": 18,
-        "Defined Package": 9,
-        "HTS Tested": 14,
-        "PrEP Active": 5,
-        "Active KPLHIV": 4,
-        "Suppressed": 3
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast",
-        "Cohort": 13,
-        "Defined Package": 7,
-        "HTS Tested": 11,
-        "PrEP Active": 5,
-        "Active KPLHIV": 3,
-        "Suppressed": 1
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast",
-        "Cohort": 9,
-        "Defined Package": 2,
-        "HTS Tested": 6,
-        "PrEP Active": 4,
-        "Active KPLHIV": 3,
-        "Suppressed": 3
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Unknown",
-        "Region": "Coast",
-        "Cohort": 1,
-        "Defined Package": 0,
-        "HTS Tested": 0,
-        "PrEP Active": 0,
-        "Active KPLHIV": 0,
-        "Suppressed": 0
-      },
-      {
-        "County": "Nairobi",
-        "SR Name": "Sr_Alpha",
+        "County": "Bungoma",
+        "SR Name": "Maaygo",
         "Region": "Nrr",
-        "Cohort": 12,
-        "Defined Package": 5,
-        "HTS Tested": 10,
-        "PrEP Active": 3,
+        "Cohort": 522,
+        "Defined Package": 517,
+        "HTS Tested": 503,
+        "PrEP Active": 375,
+        "Active KPLHIV": 14,
+        "Suppressed": 14
+      },
+      {
+        "County": "Kajiado",
+        "SR Name": "Hoymas",
+        "Region": "Ler",
+        "Cohort": 144,
+        "Defined Package": 144,
+        "HTS Tested": 143,
+        "PrEP Active": 54,
+        "Active KPLHIV": 1,
+        "Suppressed": 1
+      },
+      {
+        "County": "Kajiado",
+        "SR Name": "Hwwk",
+        "Region": "Ler",
+        "Cohort": 211,
+        "Defined Package": 210,
+        "HTS Tested": 202,
+        "PrEP Active": 61,
+        "Active KPLHIV": 8,
+        "Suppressed": 6
+      },
+      {
+        "County": "Kakamega",
+        "SR Name": "Maaygo",
+        "Region": "Nrr",
+        "Cohort": 221,
+        "Defined Package": 215,
+        "HTS Tested": 207,
+        "PrEP Active": 167,
+        "Active KPLHIV": 8,
+        "Suppressed": 7
+      },
+      {
+        "County": "Kilifi",
+        "SR Name": "Amkeni-Malindi",
+        "Region": "Cor",
+        "Cohort": 416,
+        "Defined Package": 384,
+        "HTS Tested": 375,
+        "PrEP Active": 77,
+        "Active KPLHIV": 17,
+        "Suppressed": 7
+      },
+      {
+        "County": "Kisii",
+        "SR Name": "Irdo",
+        "Region": "Wkr",
+        "Cohort": 158,
+        "Defined Package": 153,
+        "HTS Tested": 146,
+        "PrEP Active": 73,
+        "Active KPLHIV": 10,
+        "Suppressed": 10
+      },
+      {
+        "County": "Kwale",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor",
+        "Cohort": 100,
+        "Defined Package": 100,
+        "HTS Tested": 88,
+        "PrEP Active": 72,
+        "Active KPLHIV": 12,
+        "Suppressed": 3
+      },
+      {
+        "County": "Laikipia",
+        "SR Name": "Bhesp",
+        "Region": "Ler",
+        "Cohort": 185,
+        "Defined Package": 185,
+        "HTS Tested": 183,
+        "PrEP Active": 183,
         "Active KPLHIV": 2,
         "Suppressed": 2
       },
       {
+        "County": "Migori",
+        "SR Name": "Irdo",
+        "Region": "Wkr",
+        "Cohort": 296,
+        "Defined Package": 290,
+        "HTS Tested": 283,
+        "PrEP Active": 102,
+        "Active KPLHIV": 7,
+        "Suppressed": 7
+      },
+      {
+        "County": "Mombasa",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor",
+        "Cohort": 280,
+        "Defined Package": 279,
+        "HTS Tested": 279,
+        "PrEP Active": 138,
+        "Active KPLHIV": 1,
+        "Suppressed": 0
+      },
+      {
         "County": "Nairobi",
-        "SR Name": "Sr_Beta",
-        "Region": "Nrr",
-        "Cohort": 22,
-        "Defined Package": 9,
-        "HTS Tested": 17,
-        "PrEP Active": 6,
+        "SR Name": "Ishtar",
+        "Region": "Ler",
+        "Cohort": 130,
+        "Defined Package": 129,
+        "HTS Tested": 124,
+        "PrEP Active": 30,
         "Active KPLHIV": 5,
+        "Suppressed": 0
+      },
+      {
+        "County": "Nakuru",
+        "SR Name": "Hwwk",
+        "Region": "Nrr",
+        "Cohort": 114,
+        "Defined Package": 110,
+        "HTS Tested": 107,
+        "PrEP Active": 38,
+        "Active KPLHIV": 3,
         "Suppressed": 3
       },
       {
-        "County": "Nairobi",
-        "SR Name": "Sr_Gamma",
+        "County": "Siaya",
+        "SR Name": "Maaygo",
+        "Region": "Wkr",
+        "Cohort": 109,
+        "Defined Package": 106,
+        "HTS Tested": 102,
+        "PrEP Active": 100,
+        "Active KPLHIV": 5,
+        "Suppressed": 5
+      },
+      {
+        "County": "Taita Taveta",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor",
+        "Cohort": 52,
+        "Defined Package": 51,
+        "HTS Tested": 51,
+        "PrEP Active": 35,
+        "Active KPLHIV": 1,
+        "Suppressed": 0
+      },
+      {
+        "County": "Uasin Gishu",
+        "SR Name": "Niak",
         "Region": "Nrr",
-        "Cohort": 15,
-        "Defined Package": 4,
-        "HTS Tested": 13,
-        "PrEP Active": 4,
-        "Active KPLHIV": 2,
+        "Cohort": 53,
+        "Defined Package": 46,
+        "HTS Tested": 47,
+        "PrEP Active": 2,
+        "Active KPLHIV": 1,
         "Suppressed": 1
       },
       {
-        "County": "(MISSING)",
-        "SR Name": "Sr_Beta",
-        "Region": "Western",
-        "Cohort": 1,
-        "Defined Package": 1,
-        "HTS Tested": 0,
-        "PrEP Active": 0,
-        "Active KPLHIV": 1,
-        "Suppressed": 0
-      },
-      {
-        "County": "(MISSING)",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast",
-        "Cohort": 1,
-        "Defined Package": 0,
-        "HTS Tested": 0,
-        "PrEP Active": 0,
-        "Active KPLHIV": 1,
-        "Suppressed": 0
+        "County": "Vihiga",
+        "SR Name": "Maaygo",
+        "Region": "Wkr",
+        "Cohort": 133,
+        "Defined Package": 132,
+        "HTS Tested": 127,
+        "PrEP Active": 109,
+        "Active KPLHIV": 5,
+        "Suppressed": 5
       }
     ],
     "geography_breakdown": [
       {
-        "County": "Kilifi",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kilifi",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kilifi",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Alpha",
-        "Region": "Western"
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Beta",
-        "Region": "Western"
-      },
-      {
-        "County": "Kisumu",
-        "SR Name": "Sr_Gamma",
-        "Region": "Western"
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast"
-      },
-      {
-        "County": "Kwale",
-        "SR Name": "Unknown",
-        "Region": "Coast"
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Alpha",
-        "Region": "Coast"
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Beta",
-        "Region": "Coast"
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast"
-      },
-      {
-        "County": "Mombasa",
-        "SR Name": "Unknown",
-        "Region": "Coast"
-      },
-      {
-        "County": "Nairobi",
-        "SR Name": "Sr_Alpha",
+        "County": "Bungoma",
+        "SR Name": "Maaygo",
         "Region": "Nrr"
       },
       {
-        "County": "Nairobi",
-        "SR Name": "Sr_Beta",
+        "County": "Kajiado",
+        "SR Name": "Hoymas",
+        "Region": "Ler"
+      },
+      {
+        "County": "Kajiado",
+        "SR Name": "Hwwk",
+        "Region": "Ler"
+      },
+      {
+        "County": "Kakamega",
+        "SR Name": "Maaygo",
         "Region": "Nrr"
       },
       {
+        "County": "Kilifi",
+        "SR Name": "Amkeni-Malindi",
+        "Region": "Cor"
+      },
+      {
+        "County": "Kisii",
+        "SR Name": "Irdo",
+        "Region": "Wkr"
+      },
+      {
+        "County": "Kwale",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor"
+      },
+      {
+        "County": "Laikipia",
+        "SR Name": "Bhesp",
+        "Region": "Ler"
+      },
+      {
+        "County": "Migori",
+        "SR Name": "Irdo",
+        "Region": "Wkr"
+      },
+      {
+        "County": "Mombasa",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor"
+      },
+      {
         "County": "Nairobi",
-        "SR Name": "Sr_Gamma",
+        "SR Name": "Ishtar",
+        "Region": "Ler"
+      },
+      {
+        "County": "Nakuru",
+        "SR Name": "Hwwk",
         "Region": "Nrr"
       },
       {
-        "County": "(MISSING)",
-        "SR Name": "Sr_Beta",
-        "Region": "Western"
+        "County": "Siaya",
+        "SR Name": "Maaygo",
+        "Region": "Wkr"
       },
       {
-        "County": "(MISSING)",
-        "SR Name": "Sr_Gamma",
-        "Region": "Coast"
+        "County": "Taita Taveta",
+        "SR Name": "Pup-Amkeni",
+        "Region": "Cor"
+      },
+      {
+        "County": "Uasin Gishu",
+        "SR Name": "Niak",
+        "Region": "Nrr"
+      },
+      {
+        "County": "Vihiga",
+        "SR Name": "Maaygo",
+        "Region": "Wkr"
       }
     ]
   },

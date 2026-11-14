@@ -15,6 +15,8 @@ from core.compat import CompatSwitches
 from reporting.cleaned_data_exporter import (
     apply_identifier_masking,
     export_cleaned_data_workbook,
+    generate_sheet_xml_rows,
+    inject_sheet_xml_bytes,
     mask_identifier,
 )
 from reporting.dqa_exporter import export_dqa_exceptions_workbook
@@ -575,3 +577,72 @@ def test_reporting_edge_cases_and_coverage(
     layout = mgr.get_layout("semester_standard")
     export_summary_sheet(wb, "Summary", sum_aliased, layout)
     assert "Summary" in wb.sheetnames
+
+
+def test_streaming_openxml_packaging() -> None:
+    """Verifies that large cohort streaming (>500 records) generates valid workbooks and ZIP package."""
+    # Generate 550 records to trigger streaming path (> 500 records)
+    reg_df, kp_df, _ = generate_synthetic_data(population="FSW", num_clients=550, seed=99)
+    assert len(reg_df) > 500
+
+    # 1. Test generate_sheet_xml_rows directly
+    xml_bytes, total_rows, last_col = generate_sheet_xml_rows(reg_df.head(10))
+    assert isinstance(xml_bytes, bytes)
+    assert b"<row r=\"2\">" in xml_bytes
+    assert total_rows == 11
+    assert last_col != ""
+
+    # 2. Test full build_reporting_package with streaming
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # Test direct inject_sheet_xml_bytes
+        test_wb_p = Path(tmpdir) / "test_inject.xlsx"
+        wb_inj = openpyxl.Workbook()
+        ws_inj = wb_inj.active
+        ws_inj.title = "InjectSheet"
+        ws_inj.cell(row=1, column=1, value="ColA")
+        wb_inj.save(test_wb_p)
+        wb_inj.close()
+        inject_sheet_xml_bytes(
+            test_wb_p, "InjectSheet", xml_bytes, total_rows=total_rows, last_col_letter=last_col
+        )
+        wb_reloaded = openpyxl.load_workbook(test_wb_p)
+        assert wb_reloaded["InjectSheet"].max_row == 11
+
+        pkg = build_reporting_package(
+            cleaned_register=reg_df,
+            cleaned_kplhiv=kp_df,
+            population="FSW",
+            period_mode="SEM",
+            output_dir=tmpdir,
+        )
+
+        master_path = pkg["master_workbook"]
+        cleaned_path = pkg["cleaned_data_workbook"]
+        zip_path = pkg["zip_package"]
+
+        assert master_path.is_file()
+        assert cleaned_path.is_file()
+        assert zip_path.is_file()
+
+        # Re-open and verify Master workbook
+        wb_master = openpyxl.load_workbook(master_path, data_only=True)
+        assert "Cleaned Register" in wb_master.sheetnames
+        ws_reg = wb_master["Cleaned Register"]
+        assert ws_reg.max_row == len(reg_df) + 1
+        assert ws_reg.max_column == len(reg_df.columns)
+        assert ws_reg.cell(row=1, column=1).value == reg_df.columns[0]
+        assert ws_reg.cell(row=2, column=1).value == reg_df.iloc[0, 0]
+
+        # Re-open and verify Cleaned Data workbook
+        wb_cleaned = openpyxl.load_workbook(cleaned_path, data_only=True)
+        assert "Cleaned Register" in wb_cleaned.sheetnames
+        assert "Cleaned KPLHIV" in wb_cleaned.sheetnames
+        assert wb_cleaned["Cleaned Register"].max_row == len(reg_df) + 1
+
+        # Re-open and verify ZIP package
+        with zipfile.ZipFile(zip_path, "r") as zf:
+            namelist = zf.namelist()
+            assert master_path.name in namelist
+            assert "01_Summary_FSW_SEM.xlsx" in namelist
+            assert "02_Cleaned_Data_FSW.xlsx" in namelist
+

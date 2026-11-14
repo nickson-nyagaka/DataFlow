@@ -11,7 +11,11 @@ import openpyxl
 import pandas as pd
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 
-from reporting.cleaned_data_exporter import export_dataframe_sheet
+from reporting.cleaned_data_exporter import (
+    export_dataframe_sheet,
+    generate_sheet_xml_rows,
+    inject_sheet_xml_bytes,
+)
 from reporting.dqa_exporter import export_dqa_exceptions_sheet
 from reporting.excel_exporter import export_age_sex_disaggregation_sheet, export_summary_sheet
 from reporting.summary_builder import build_export_summary
@@ -230,6 +234,16 @@ def build_reporting_package(
         layout_spec=layout,
     )
 
+    is_large = len(cleaned_register) > 500
+    register_xml_bytes: bytes | None = None
+    total_reg_rows: int | None = None
+    last_reg_col: str | None = None
+
+    if is_large:
+        register_xml_bytes, total_reg_rows, last_reg_col = generate_sheet_xml_rows(
+            cleaned_register, mask_identifiers=mask_identifiers
+        )
+
     # 2. Build Master Multi-Tab Workbook
     master_wb = openpyxl.Workbook()
     default_sheet = master_wb.active
@@ -246,6 +260,7 @@ def build_reporting_package(
         cleaned_register,
         mask_identifiers=mask_identifiers,
         config=manager,
+        header_only=is_large,
     )
 
     # Tab 3: Cleaned KPLHIV
@@ -281,6 +296,15 @@ def build_reporting_package(
     master_wb.close()
     del master_wb
 
+    if is_large and register_xml_bytes is not None:
+        inject_sheet_xml_bytes(
+            master_path,
+            "Cleaned Register",
+            register_xml_bytes,
+            total_rows=total_reg_rows,
+            last_col_letter=last_reg_col,
+        )
+
     # 3. Build Modular Workbooks for ZIP Package
     pop_str = population.upper()
     period_str = period_mode.upper()
@@ -295,24 +319,55 @@ def build_reporting_package(
     del summary_wb
 
     cleaned_data_path = out_dir / f"02_Cleaned_Data_{pop_str}.xlsx"
-    cleaned_wb = openpyxl.Workbook(write_only=True)
-    export_dataframe_sheet(
-        cleaned_wb,
-        "Cleaned Register",
-        cleaned_register,
-        mask_identifiers=mask_identifiers,
-        config=manager,
-    )
-    export_dataframe_sheet(
-        cleaned_wb,
-        "Cleaned KPLHIV",
-        cleaned_kplhiv,
-        mask_identifiers=mask_identifiers,
-        config=manager,
-    )
-    cleaned_wb.save(cleaned_data_path)
-    cleaned_wb.close()
-    del cleaned_wb
+    if is_large and register_xml_bytes is not None:
+        cleaned_wb = openpyxl.Workbook()
+        if cleaned_wb.active is not None:
+            cleaned_wb.remove(cleaned_wb.active)
+        export_dataframe_sheet(
+            cleaned_wb,
+            "Cleaned Register",
+            cleaned_register,
+            mask_identifiers=mask_identifiers,
+            config=manager,
+            header_only=True,
+        )
+        export_dataframe_sheet(
+            cleaned_wb,
+            "Cleaned KPLHIV",
+            cleaned_kplhiv,
+            mask_identifiers=mask_identifiers,
+            config=manager,
+            header_only=False,
+        )
+        cleaned_wb.save(cleaned_data_path)
+        cleaned_wb.close()
+        del cleaned_wb
+        inject_sheet_xml_bytes(
+            cleaned_data_path,
+            "Cleaned Register",
+            register_xml_bytes,
+            total_rows=total_reg_rows,
+            last_col_letter=last_reg_col,
+        )
+    else:
+        cleaned_wb = openpyxl.Workbook(write_only=True)
+        export_dataframe_sheet(
+            cleaned_wb,
+            "Cleaned Register",
+            cleaned_register,
+            mask_identifiers=mask_identifiers,
+            config=manager,
+        )
+        export_dataframe_sheet(
+            cleaned_wb,
+            "Cleaned KPLHIV",
+            cleaned_kplhiv,
+            mask_identifiers=mask_identifiers,
+            config=manager,
+        )
+        cleaned_wb.save(cleaned_data_path)
+        cleaned_wb.close()
+        del cleaned_wb
 
     dqa_path = out_dir / f"03_DQA_Exceptions_{pop_str}.xlsx"
     dqa_wb = openpyxl.Workbook()
@@ -347,7 +402,8 @@ def build_reporting_package(
 
     # 4. Assemble ZIP Package
     zip_path = out_dir / f"DATAFLOW_Package_{pop_str}_{period_str}.zip"
-    with zipfile.ZipFile(zip_path, "w", compression=zipfile.ZIP_DEFLATED) as zf:
+    zip_compression = zipfile.ZIP_STORED if is_large else zipfile.ZIP_DEFLATED
+    with zipfile.ZipFile(zip_path, "w", compression=zip_compression) as zf:
         zf.write(master_path, arcname=master_path.name)
         zf.write(summary_only_path, arcname=summary_only_path.name)
         zf.write(cleaned_data_path, arcname=cleaned_data_path.name)
