@@ -85,8 +85,8 @@ def test_dqa_clinical_consistency_on_planted_kp_template_defects():
     kp_clean = clean_kplhiv_frame(kp_raw)
 
     dqa_res = run_dqa(reg_clean, kp_clean, population="TG", block_on_critical=False)
-    assert dqa_res.rule_counts.get("DQA_HIV_NEG_ON_ART", 0) >= 1
-    assert dqa_res.rule_counts.get("DQA_PREP_ON_POSITIVE", 0) >= 1
+    assert dqa_res.rule_counts.get("hiv_neg_on_art", 0) >= 1
+    assert dqa_res.rule_counts.get("prep_on_positive", 0) >= 1
 
 
 def test_backward_compatibility_with_synthetic_fixtures():

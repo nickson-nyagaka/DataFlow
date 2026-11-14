@@ -114,6 +114,20 @@ class OverrideManager:
         with open(self.audit_log_path, mode="a", encoding="utf-8") as f:
             f.write(json.dumps(log_entry) + "\n")
 
+    def _find_override(self, rule_id: str) -> RuleOverride | None:
+        """Finds override matching rule_id, supporting both clean IDs and legacy DQA_ prefixes."""
+        if rule_id in self._overrides:
+            return self._overrides[rule_id]
+        norm = rule_id.lower()
+        if norm.startswith("dqa_"):
+            norm = norm[4:]
+        if norm in self._overrides:
+            return self._overrides[norm]
+        upper_dqa = f"DQA_{norm.upper()}"
+        if upper_dqa in self._overrides:
+            return self._overrides[upper_dqa]
+        return None
+
     def check_export_status(
         self,
         dqa_results: DQAResults | None,
@@ -148,7 +162,7 @@ class OverrideManager:
         blocking_rules: list[str] = []
 
         for rule_id, count in critical_counts.items():
-            override = self._overrides.get(rule_id)
+            override = self._find_override(rule_id)
             if not (override and override.is_valid_for(file_hash=file_hash, current_count=count)):
                 blocking_rules.append(f"{rule_id} ({count} exceptions)")
 
@@ -181,7 +195,7 @@ class OverrideManager:
 
         provisional = []
         for rule_id, count in critical_counts.items():
-            override = self._overrides.get(rule_id)
+            override = self._find_override(rule_id)
             if override and override.is_valid_for(file_hash=file_hash, current_count=count):
                 provisional.append(f"OVERRIDDEN:{rule_id}({count})")
         return provisional

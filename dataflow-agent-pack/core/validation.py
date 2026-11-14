@@ -58,6 +58,39 @@ class DQARule:
     sheet_target: str = "Register"  # Register, KPLHIV, Cross-sheet
 
 
+class DQARuleCounts(dict):
+    """Case-insensitive and prefix-tolerant dictionary for DQA rule counts."""
+
+    def __getitem__(self, key: str) -> int:
+        if super().__contains__(key):
+            return super().__getitem__(key)
+        norm = str(key).lower().removeprefix("dqa_")
+        if super().__contains__(norm):
+            return super().__getitem__(norm)
+        upper_dqa = f"DQA_{norm.upper()}"
+        if super().__contains__(upper_dqa):
+            return super().__getitem__(upper_dqa)
+        return super().__getitem__(key)
+
+    def get(self, key: str, default: Any = 0) -> Any:
+        try:
+            return self[key]
+        except KeyError:
+            return default
+
+    def __contains__(self, key: object) -> bool:
+        if super().__contains__(key):
+            return True
+        if isinstance(key, str):
+            norm = key.lower().removeprefix("dqa_")
+            if super().__contains__(norm):
+                return True
+            upper_dqa = f"DQA_{norm.upper()}"
+            if super().__contains__(upper_dqa):
+                return True
+        return False
+
+
 @dataclass
 class DQAResults:
     """Aggregated output of a DQA execution run."""
@@ -72,9 +105,9 @@ class DQAResults:
     def get_critical_counts(self) -> dict[str, int]:
         """Returns counts for critical rules only."""
         if self.exceptions_df.empty:
-            return {}
+            return DQARuleCounts()
         crit = self.exceptions_df[self.exceptions_df["severity"] == "Critical"]
-        return crit["rule_id"].value_counts().to_dict()
+        return DQARuleCounts(crit["rule_id"].value_counts().to_dict())
 
 
 # ---------------------------------------------------------------------------
@@ -82,152 +115,152 @@ class DQAResults:
 # ---------------------------------------------------------------------------
 
 RULE_DEFINITIONS: dict[str, DQARule] = {
-    "DQA_DUPLICATE_UIC": DQARule(
-        id="DQA_DUPLICATE_UIC",
+    "duplicate_uic": DQARule(
+        id="duplicate_uic",
         name="Duplicate UIC in Register",
         severity="Critical",
         description="Multiple records found sharing the same Unique Identifier Code (UIC).",
         suggested_action="Review duplicate client encounters with Sub-Recipient; merge records if same visit or update UIC if distinct clients.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_UIC": DQARule(
-        id="DQA_MISSING_UIC",
+    "missing_uic": DQARule(
+        id="missing_uic",
         name="Missing Client UIC",
         severity="Critical",
         description="Client record is missing mandatory Unique Identifier Code.",
         suggested_action="Assign valid programmatic UIC prior to reporting.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_COUNTY": DQARule(
-        id="DQA_MISSING_COUNTY",
+    "missing_county": DQARule(
+        id="missing_county",
         name="Missing County Geography",
         severity="Critical",
         description="Client record is missing County geographical classification.",
         suggested_action="Assign valid County to maintain reporting geographic integrity.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_SR_NAME": DQARule(
-        id="DQA_MISSING_SR_NAME",
+    "missing_sr_name": DQARule(
+        id="missing_sr_name",
         name="Missing Sub-Recipient Name",
         severity="Critical",
         description="Client record has missing or 'Unknown' Sub-Recipient (SR) name.",
         suggested_action="Assign valid implementing Sub-Recipient organization name.",
         sheet_target="Register",
     ),
-    "DQA_HIV_NEG_ON_ART": DQARule(
-        id="DQA_HIV_NEG_ON_ART",
+    "hiv_neg_on_art": DQARule(
+        id="hiv_neg_on_art",
         name="HIV Negative on ART",
         severity="Critical",
         description="Inconsistent clinical status: HIV-negative client documented as currently on ART.",
         suggested_action="Verify HIV test confirmation and ART regimen linkage.",
         sheet_target="Register",
     ),
-    "DQA_PREP_ON_POSITIVE": DQARule(
-        id="DQA_PREP_ON_POSITIVE",
+    "prep_on_positive": DQARule(
+        id="prep_on_positive",
         name="PrEP Initiated/Refilled on HIV Positive Client",
         severity="Critical",
         description="Inconsistent clinical status: HIV-positive client initiated, restarted, or refilled on PrEP.",
         suggested_action="Discontinue PrEP immediately; verify ART linkage and confirmatory testing.",
         sheet_target="Register",
     ),
-    "DQA_CCC_REG_NOT_KPLHIV": DQARule(
-        id="DQA_CCC_REG_NOT_KPLHIV",
+    "ccc_reg_not_kplhiv": DQARule(
+        id="ccc_reg_not_kplhiv",
         name="Register CCC Missing in KPLHIV Sheet",
         severity="Critical",
         description="Client documented with a CCC number in the Register sheet is missing from the KPLHIV sheet.",
         suggested_action="Add client to KPLHIV register to track ART outcomes and viral load monitoring.",
         sheet_target="Cross-sheet",
     ),
-    "DQA_HIV_POS_NO_ART": DQARule(
-        id="DQA_HIV_POS_NO_ART",
+    "hiv_pos_no_art": DQARule(
+        id="hiv_pos_no_art",
         name="HIV Positive Not on ART",
         severity="Major",
         description="Clinical linkage gap: HIV-positive client not documented as currently on ART.",
         suggested_action="Link client to ART facility and document CCC number and ART initiation.",
         sheet_target="Register",
     ),
-    "DQA_TB_UNSCREENED": DQARule(
-        id="DQA_TB_UNSCREENED",
+    "tb_unscreened": DQARule(
+        id="tb_unscreened",
         name="TB Diagnosed Without Documented Screening",
         severity="Major",
         description="Client diagnosed with TB without documented prior TB screening.",
         suggested_action="Complete TB screening assessment documentation in register.",
         sheet_target="Register",
     ),
-    "DQA_STI_UNSCREENED": DQARule(
-        id="DQA_STI_UNSCREENED",
+    "sti_unscreened": DQARule(
+        id="sti_unscreened",
         name="STI Diagnosed/Treated Without Documented Screening",
         severity="Major",
         description="Client diagnosed or treated for STI without documented prior STI syndromic screening.",
         suggested_action="Complete STI syndromic screening assessment documentation in register.",
         sheet_target="Register",
     ),
-    "DQA_MULTIPLE_PREP_INITIATIONS": DQARule(
-        id="DQA_MULTIPLE_PREP_INITIATIONS",
+    "multiple_prep_initiations": DQARule(
+        id="multiple_prep_initiations",
         name="Multiple PrEP Initiations in Period",
         severity="Major",
         description="Client documented with multiple PrEP initiations within the reporting period.",
         suggested_action="Verify whether subsequent initiation should be coded as 'Restart' or 'Refill'.",
         sheet_target="Register",
     ),
-    "DQA_CCC_KPLHIV_NOT_REG": DQARule(
-        id="DQA_CCC_KPLHIV_NOT_REG",
+    "ccc_kplhiv_not_reg": DQARule(
+        id="ccc_kplhiv_not_reg",
         name="KPLHIV Client CCC Missing in Register Sheet",
         severity="Major",
         description="Client in KPLHIV sheet has a CCC number that does not exist in the primary Register sheet.",
         suggested_action="Verify client enrollment in primary cohort register.",
         sheet_target="Cross-sheet",
     ),
-    "DQA_MISSING_AGE": DQARule(
-        id="DQA_MISSING_AGE",
+    "missing_age": DQARule(
+        id="missing_age",
         name="Missing Client Age",
         severity="Major",
         description="Client record is missing numeric age.",
         suggested_action="Document client age or calculate from Date of Birth.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_SEX": DQARule(
-        id="DQA_MISSING_SEX",
+    "missing_sex": DQARule(
+        id="missing_sex",
         name="Missing Biological Sex",
         severity="Major",
         description="Client record is missing biological sex.",
         suggested_action="Document client sex in register per national guidelines.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_DOB": DQARule(
-        id="DQA_MISSING_DOB",
+    "missing_dob": DQARule(
+        id="missing_dob",
         name="Missing Date of Birth",
         severity="Major",
         description="Client record is missing Date of Birth.",
         suggested_action="Record client date of birth for age cohort validation.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_ENROLMENT_DATE": DQARule(
-        id="DQA_MISSING_ENROLMENT_DATE",
+    "missing_enrolment_date": DQARule(
+        id="missing_enrolment_date",
         name="Missing Date of Enrolment",
         severity="Major",
         description="Client record is missing Date of Enrolment into key population program.",
         suggested_action="Verify and document date client was enrolled into cohort.",
         sheet_target="Register",
     ),
-    "DQA_MISSING_PE_CODE": DQARule(
-        id="DQA_MISSING_PE_CODE",
+    "missing_pe_code": DQARule(
+        id="missing_pe_code",
         name="Missing Peer Educator Code",
         severity="Major",
         description="Client record is missing Peer Educator Code.",
         suggested_action="Assign outreach peer educator code to client.",
         sheet_target="Register",
     ),
-    "DQA_UNPARSEABLE_DATE": DQARule(
-        id="DQA_UNPARSEABLE_DATE",
+    "unparseable_date": DQARule(
+        id="unparseable_date",
         name="Unparseable Date Format",
         severity="Minor",
         description="Date value does not conform to standard format and was coerced to null/NaT.",
         suggested_action="Format date as DD/MM/YYYY.",
         sheet_target="Register",
     ),
-    "DQA_INVALID_VOCABULARY": DQARule(
-        id="DQA_INVALID_VOCABULARY",
+    "invalid_vocabulary": DQARule(
+        id="invalid_vocabulary",
         name="Controlled Vocabulary Inconsistency",
         severity="Minor",
         description="Categorical value does not conform to national controlled vocabulary.",
@@ -235,6 +268,10 @@ RULE_DEFINITIONS: dict[str, DQARule] = {
         sheet_target="Register",
     ),
 }
+
+# Add backward compatibility aliases so legacy uppercase lookups resolve seamlessly
+for _k, _rule in list(RULE_DEFINITIONS.items()):
+    RULE_DEFINITIONS[f"DQA_{_k.upper()}"] = _rule
 
 
 # ---------------------------------------------------------------------------
@@ -281,7 +318,7 @@ def check_duplicate_uic(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, A
     dup_mask = reg_df[uic_col].isin(uic_s[uic_s.duplicated(keep=False)])
 
     records = []
-    rule = RULE_DEFINITIONS["DQA_DUPLICATE_UIC"]
+    rule = RULE_DEFINITIONS["duplicate_uic"]
     for idx in reg_df[dup_mask].index:
         region, sr_name, county = _get_geo_fields(reg_df, idx)
         records.append(
@@ -346,7 +383,7 @@ def check_hiv_neg_on_art(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, 
 
     Evaluates across all visit encounter columns: hiv_tested_results_* == 'Negative' and currently_on_art_* == 'Yes'.
     """
-    rule = RULE_DEFINITIONS["DQA_HIV_NEG_ON_ART"]
+    rule = RULE_DEFINITIONS["hiv_neg_on_art"]
     hiv_cols = sorted([c for c in reg_df.columns if re.match(r"^hiv_tested_results.*", c)])
     art_cols = sorted([c for c in reg_df.columns if re.match(r"^currently_on_art.*", c)])
 
@@ -384,7 +421,7 @@ def check_hiv_neg_on_art(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, 
 
 def check_prep_on_positive(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, Any]]:
     """Flags HIV-positive clients initiated/refilled on PrEP (notebook cell 36)."""
-    rule = RULE_DEFINITIONS["DQA_PREP_ON_POSITIVE"]
+    rule = RULE_DEFINITIONS["prep_on_positive"]
     prep_cols = sorted([c for c in reg_df.columns if re.match(r"^prep_status.*", c)])
     hiv_cols = sorted([c for c in reg_df.columns if re.match(r"^hiv_tested_results.*", c)])
 
@@ -443,7 +480,7 @@ def check_prep_on_positive(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str
 
 def check_hiv_pos_no_art(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, Any]]:
     """Flags HIV-positive clients who are not on ART (D-014)."""
-    rule = RULE_DEFINITIONS["DQA_HIV_POS_NO_ART"]
+    rule = RULE_DEFINITIONS["hiv_pos_no_art"]
     hiv_cols = sorted([c for c in reg_df.columns if re.match(r"^hiv_tested_results.*", c)])
     art_cols = sorted([c for c in reg_df.columns if re.match(r"^currently_on_art.*", c)])
 
@@ -480,7 +517,7 @@ def check_hiv_pos_no_art(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, 
 
 def check_tb_unscreened(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, Any]]:
     """Flags TB diagnosed without documented screening (D-015)."""
-    rule = RULE_DEFINITIONS["DQA_TB_UNSCREENED"]
+    rule = RULE_DEFINITIONS["tb_unscreened"]
     screen_cols = sorted([c for c in reg_df.columns if re.match(r"^screened_for_tb.*", c)])
     diag_cols = sorted([c for c in reg_df.columns if re.match(r"^diagnosed_with_tb.*", c)])
 
@@ -533,7 +570,7 @@ def check_tb_unscreened(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, A
 
 def check_sti_unscreened(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, Any]]:
     """Flags STI diagnosed/treated without documented screening (D-016)."""
-    rule = RULE_DEFINITIONS["DQA_STI_UNSCREENED"]
+    rule = RULE_DEFINITIONS["sti_unscreened"]
     screen_cols = sorted([c for c in reg_df.columns if re.match(r"^screened_for_stis.*", c)])
     diag_cols = sorted([c for c in reg_df.columns if re.match(r"^diagnosed_with_sti.*", c)])
     treat_cols = sorted([c for c in reg_df.columns if re.match(r"^treated_for_stis.*", c)])
@@ -589,7 +626,7 @@ def check_sti_unscreened(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, 
 
 def check_multiple_prep_initiations(reg_df: pd.DataFrame, **kwargs: Any) -> list[dict[str, Any]]:
     """Flags clients with >1 PrEP Initiations in reporting period (notebook cell 34)."""
-    rule = RULE_DEFINITIONS["DQA_MULTIPLE_PREP_INITIATIONS"]
+    rule = RULE_DEFINITIONS["multiple_prep_initiations"]
     prep_cols = sorted([c for c in reg_df.columns if re.match(r"^prep_status.*", c)])
 
     if not prep_cols:
@@ -664,7 +701,7 @@ def check_cross_sheet_ccc(
     reg_ccc_set = set(reg_clean_ccc)
 
     # 1. Register CCC missing in KPLHIV (Critical per D-018)
-    rule_reg_not_kp = RULE_DEFINITIONS["DQA_CCC_REG_NOT_KPLHIV"]
+    rule_reg_not_kp = RULE_DEFINITIONS["ccc_reg_not_kplhiv"]
     uic_reg = _get_uic_series(reg_df)
     mask_reg = reg_df[reg_ccc_col].isin(reg_clean_ccc[~reg_clean_ccc.isin(kp_ccc_set)])
     for idx in reg_df[mask_reg].index:
@@ -686,7 +723,7 @@ def check_cross_sheet_ccc(
         )
 
     # 2. KPLHIV CCC missing in Register (Major per D-018)
-    rule_kp_not_reg = RULE_DEFINITIONS["DQA_CCC_KPLHIV_NOT_REG"]
+    rule_kp_not_reg = RULE_DEFINITIONS["ccc_kplhiv_not_reg"]
     uic_kp = _get_uic_series(kplhiv_df)
     mask_kp = kplhiv_df[kplhiv_ccc_col].isin(kp_clean_ccc[~kp_clean_ccc.isin(reg_ccc_set)])
     for idx in kplhiv_df[mask_kp].index:
@@ -739,31 +776,31 @@ def run_dqa(
     # 2. Missing Key Demographic Columns
     all_exceptions.extend(
         check_missing_demographic_field(
-            register_df, "kp_vp_unique_identifier_code", "DQA_MISSING_UIC"
+            register_df, "kp_vp_unique_identifier_code", "missing_uic"
         )
     )
     all_exceptions.extend(
-        check_missing_demographic_field(register_df, "county", "DQA_MISSING_COUNTY")
+        check_missing_demographic_field(register_df, "county", "missing_county")
     )
     all_exceptions.extend(
         check_missing_demographic_field(
-            register_df, "sr_name", "DQA_MISSING_SR_NAME", treat_unknown_as_missing=True
+            register_df, "sr_name", "missing_sr_name", treat_unknown_as_missing=True
         )
     )
-    all_exceptions.extend(check_missing_demographic_field(register_df, "age", "DQA_MISSING_AGE"))
+    all_exceptions.extend(check_missing_demographic_field(register_df, "age", "missing_age"))
     all_exceptions.extend(
-        check_missing_demographic_field(register_df, "sex_m_f_", "DQA_MISSING_SEX")
+        check_missing_demographic_field(register_df, "sex_m_f_", "missing_sex")
     )
     all_exceptions.extend(
-        check_missing_demographic_field(register_df, "date_of_birth_dd_mm_yyyy_", "DQA_MISSING_DOB")
+        check_missing_demographic_field(register_df, "date_of_birth_dd_mm_yyyy_", "missing_dob")
     )
     all_exceptions.extend(
         check_missing_demographic_field(
-            register_df, "date_of_enrolment", "DQA_MISSING_ENROLMENT_DATE"
+            register_df, "date_of_enrolment", "missing_enrolment_date"
         )
     )
     all_exceptions.extend(
-        check_missing_demographic_field(register_df, "peer_educator_code", "DQA_MISSING_PE_CODE")
+        check_missing_demographic_field(register_df, "peer_educator_code", "missing_pe_code")
     )
 
     # 3. Clinical Inconsistencies
@@ -799,7 +836,7 @@ def run_dqa(
         )
 
     # Compute Summaries
-    rule_counts = (
+    rule_counts = DQARuleCounts(
         exceptions_df["rule_id"].value_counts().to_dict() if not exceptions_df.empty else {}
     )
     severity_counts = (
@@ -863,10 +900,14 @@ def format_aggregate_dqa_report(
     lines.append("\nSummary by Rule & Severity:")
     lines.append(f"{'RULE ID':<30} | {'SEVERITY':<10} | {'COUNT':<6}")
     lines.append("-" * 52)
-    for rule_id, rule_meta in RULE_DEFINITIONS.items():
-        cnt = results.rule_counts.get(rule_id, 0)
+    seen_ids: set[str] = set()
+    for _rule_id, rule_meta in RULE_DEFINITIONS.items():
+        if rule_meta.id in seen_ids:
+            continue
+        seen_ids.add(rule_meta.id)
+        cnt = results.rule_counts.get(rule_meta.id, 0)
         if cnt > 0:
-            lines.append(f"{rule_id:<30} | {rule_meta.severity:<10} | {cnt:<6}")
+            lines.append(f"{rule_meta.id:<30} | {rule_meta.severity:<10} | {cnt:<6}")
 
     lines.append("\n" + "=" * 70)
     lines.append("CONFIRMATION: Aggregate counts and rule IDs only. Zero client UICs printed.")

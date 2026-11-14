@@ -21,16 +21,16 @@ def temp_audit_log(tmp_path: Path) -> Path:
 def sample_dqa_results() -> DQAResults:
     exceptions_df = pd.DataFrame(
         [
-            {"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-001"},
-            {"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-002"},
-            {"rule_id": "DQA_HIV_POS_NO_ART", "severity": "Major", "uic": "UIC-003"},
+            {"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-001"},
+            {"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-002"},
+            {"rule_id": "hiv_pos_no_art", "severity": "Major", "uic": "UIC-003"},
         ]
     )
     summary_df = pd.DataFrame()
     return DQAResults(
         exceptions_df=exceptions_df,
         summary_df=summary_df,
-        rule_counts={"DQA_DUPLICATE_UIC": 2, "DQA_HIV_POS_NO_ART": 1},
+        rule_counts={"duplicate_uic": 2, "hiv_pos_no_art": 1},
         severity_counts={"Critical": 2, "Major": 1},
         has_critical=True,
         total_exceptions=3,
@@ -43,7 +43,7 @@ def test_override_manager_validation(temp_audit_log: Path):
     # Empty name fails
     with pytest.raises(ValueError, match="Authorized user name is required"):
         manager.record_override(
-            rule_id="DQA_DUPLICATE_UIC",
+            rule_id="duplicate_uic",
             authorized_by="  ",
             reason="Justification with more than twenty characters here.",
             file_hash="hash123",
@@ -53,7 +53,7 @@ def test_override_manager_validation(temp_audit_log: Path):
     # Short reason fails (<20 chars)
     with pytest.raises(ValueError, match="at least 20 characters"):
         manager.record_override(
-            rule_id="DQA_DUPLICATE_UIC",
+            rule_id="duplicate_uic",
             authorized_by="Dr. Jane",
             reason="Too short",
             file_hash="hash123",
@@ -63,7 +63,7 @@ def test_override_manager_validation(temp_audit_log: Path):
     # Non-positive count fails
     with pytest.raises(ValueError, match="non-positive count"):
         manager.record_override(
-            rule_id="DQA_DUPLICATE_UIC",
+            rule_id="duplicate_uic",
             authorized_by="Dr. Jane",
             reason="Justification with more than twenty characters here.",
             file_hash="hash123",
@@ -73,7 +73,7 @@ def test_override_manager_validation(temp_audit_log: Path):
     # Missing file hash fails
     with pytest.raises(ValueError, match="Valid file hash is required"):
         manager.record_override(
-            rule_id="DQA_DUPLICATE_UIC",
+            rule_id="duplicate_uic",
             authorized_by="Dr. Jane",
             reason="Justification with more than twenty characters here.",
             file_hash="",
@@ -84,14 +84,14 @@ def test_override_manager_validation(temp_audit_log: Path):
 def test_override_audit_logging_no_pii(temp_audit_log: Path):
     manager = OverrideManager(audit_log_path=temp_audit_log)
     override = manager.record_override(
-        rule_id="DQA_DUPLICATE_UIC",
+        rule_id="duplicate_uic",
         authorized_by="Analyst Bob",
         reason="Partner confirmed duplicate encounters will be reconciled at end of month.",
         file_hash="sha256abc123",
         exception_count=5,
     )
 
-    assert override.rule_id == "DQA_DUPLICATE_UIC"
+    assert override.rule_id == "duplicate_uic"
     assert temp_audit_log.exists()
 
     with open(temp_audit_log, encoding="utf-8") as f:
@@ -99,7 +99,7 @@ def test_override_audit_logging_no_pii(temp_audit_log: Path):
     assert len(lines) == 1
     record = json.loads(lines[0])
     assert record["event"] == "CRITICAL_DQA_OVERRIDE"
-    assert record["rule_id"] == "DQA_DUPLICATE_UIC"
+    assert record["rule_id"] == "duplicate_uic"
     assert record["exception_count"] == 5
     assert record["authorized_by"] == "Analyst Bob"
     # Ensure no patient identifiers or client values are logged
@@ -131,12 +131,12 @@ def test_export_gating_and_hash_invalidation(temp_audit_log: Path, sample_dqa_re
         block_on_critical=True,
     )
     assert is_blocked is True
-    assert "DQA_DUPLICATE_UIC" in reasons[0]
+    assert "duplicate_uic" in reasons[0]
     assert is_prov is False
 
     # 2. Record valid override
     manager.record_override(
-        rule_id="DQA_DUPLICATE_UIC",
+        rule_id="duplicate_uic",
         authorized_by="Supervisor Jane",
         reason="Verified distinct clients with clinic; UIC typo will be updated next quarter.",
         file_hash="hash123",
@@ -151,7 +151,7 @@ def test_export_gating_and_hash_invalidation(temp_audit_log: Path, sample_dqa_re
     assert is_blocked is False
     assert is_prov is True
     prov_reasons = manager.get_provisional_reasons(sample_dqa_results, "hash123", True)
-    assert "OVERRIDDEN:DQA_DUPLICATE_UIC(2)" in prov_reasons
+    assert "OVERRIDDEN:duplicate_uic(2)" in prov_reasons
 
     # 3. Changed file hash cancels override (new data uploaded)
     is_blocked, reasons, is_prov = manager.check_export_status(
@@ -165,15 +165,15 @@ def test_export_gating_and_hash_invalidation(temp_audit_log: Path, sample_dqa_re
     # 4. Changed count cancels override
     exceptions_df2 = pd.DataFrame(
         [
-            {"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-001"},
-            {"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-002"},
-            {"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-003"},
+            {"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-001"},
+            {"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-002"},
+            {"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-003"},
         ]
     )
     dqa2 = DQAResults(
         exceptions_df=exceptions_df2,
         summary_df=pd.DataFrame(),
-        rule_counts={"DQA_DUPLICATE_UIC": 3},
+        rule_counts={"duplicate_uic": 3},
         severity_counts={"Critical": 3},
         has_critical=True,
         total_exceptions=3,
@@ -198,4 +198,25 @@ def test_advisory_mode(temp_audit_log: Path, sample_dqa_results: DQAResults):
     assert is_prov is True
     assert len(reasons) == 0
     prov = manager.get_provisional_reasons(sample_dqa_results, "hash123", False)
-    assert "ADVISORY_MODE:DQA_DUPLICATE_UIC(2)" in prov
+    assert "ADVISORY_MODE:duplicate_uic(2)" in prov
+
+
+def test_override_legacy_rule_id_compatibility(temp_audit_log: Path, sample_dqa_results: DQAResults):
+    manager = OverrideManager(audit_log_path=temp_audit_log)
+    manager.record_override(
+        rule_id="DQA_DUPLICATE_UIC",  # Legacy prefix
+        authorized_by="Supervisor Jane",
+        reason="Verified distinct clients with clinic; UIC typo will be updated next quarter.",
+        file_hash="hash123",
+        exception_count=2,
+    )
+    is_blocked, reasons, is_prov = manager.check_export_status(
+        dqa_results=sample_dqa_results,
+        file_hash="hash123",
+        block_on_critical=True,
+    )
+    assert is_blocked is False
+    assert is_prov is True
+    prov = manager.get_provisional_reasons(sample_dqa_results, "hash123", True)
+    assert "OVERRIDDEN:duplicate_uic(2)" in prov
+

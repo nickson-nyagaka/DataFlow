@@ -13,17 +13,18 @@ Validates:
 from __future__ import annotations
 
 from pathlib import Path
+
 import openpyxl
 import pandas as pd
 import pytest
 
+from analytics.demographics import compute_kpi_demographic_summary
+from analytics.engine import run_analytics
 from core.cleaning import clean_kplhiv_frame, clean_register_frame
 from core.config_models import load_population_config
 from core.ingestion import ingest_workbook
 from core.runner import run_full_pipeline
 from core.validation import run_dqa
-from analytics.demographics import compute_kpi_demographic_summary
-from analytics.engine import run_analytics
 from reporting.package_builder import build_export_summary
 
 RAW_TG_PATH = Path("reference/Consolidated TG.xlsb")
@@ -89,18 +90,18 @@ def test_tg_dqa_accuracy(tg_datasets):
 
     # Assert exactly 5 exceptions total
     assert dqa_res.total_exceptions == 5
-    assert dqa_res.get_critical_counts() == {"DQA_HIV_NEG_ON_ART": 3}
+    assert dqa_res.get_critical_counts() == {"hiv_neg_on_art": 3}
     assert dqa_res.severity_counts == {"Critical": 3, "Major": 2}
     assert dqa_res.rule_counts == {
-        "DQA_HIV_NEG_ON_ART": 3,
-        "DQA_HIV_POS_NO_ART": 2,
+        "hiv_neg_on_art": 3,
+        "hiv_pos_no_art": 2,
     }
 
     # Verify zero false positives for date fields
-    assert "DQA_MISSING_ENROLMENT_DATE" not in dqa_res.rule_counts
-    assert "DQA_MISSING_DOB" not in dqa_res.rule_counts
-    assert "DQA_DUPLICATE_UIC" not in dqa_res.rule_counts
-    assert "DQA_MISSING_UIC" not in dqa_res.rule_counts
+    assert "missing_enrolment_date" not in dqa_res.rule_counts
+    assert "missing_dob" not in dqa_res.rule_counts
+    assert "duplicate_uic" not in dqa_res.rule_counts
+    assert "missing_uic" not in dqa_res.rule_counts
 
 
 def test_tg_defined_package_rules(tg_datasets):

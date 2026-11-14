@@ -182,12 +182,12 @@ def test_sabotage_critical_dqa_blocks_summary_export(tmp_path: Path):
     mgr = OverrideManager(audit_log_path=tmp_path / "audit.jsonl")
 
     exc_df = pd.DataFrame(
-        [{"rule_id": "DQA_DUPLICATE_UIC", "severity": "Critical", "uic": "UIC-001"}]
+        [{"rule_id": "duplicate_uic", "severity": "Critical", "uic": "UIC-001"}]
     )
     dqa = DQAResults(
         exceptions_df=exc_df,
         summary_df=pd.DataFrame(),
-        rule_counts={"DQA_DUPLICATE_UIC": 1},
+        rule_counts={"duplicate_uic": 1},
         severity_counts={"Critical": 1},
         has_critical=True,
         total_exceptions=1,
@@ -199,7 +199,7 @@ def test_sabotage_critical_dqa_blocks_summary_export(tmp_path: Path):
         block_on_critical=True,
     )
     assert is_blocked is True
-    assert "DQA_DUPLICATE_UIC" in reasons[0]
+    assert "duplicate_uic" in reasons[0]
     assert "UIC-001" not in reasons[0]  # Zero PII in reasons
 
 
@@ -320,25 +320,25 @@ def _build_test_pipeline_result(tmp_path: Path):
         exceptions_df=pd.DataFrame(
             [
                 {
-                    "rule_id": "DQA_INVALID_AGE",
+                    "rule_id": "missing_age",
                     "severity": "Minor",
                     "uic": "UIC-001",
-                    "description": "Invalid age",
+                    "description": "Missing age",
                 }
             ]
         ),
         summary_df=pd.DataFrame(
             [
                 {
-                    "rule_id": "DQA_INVALID_AGE",
-                    "rule_name": "Invalid Age",
+                    "rule_id": "missing_age",
+                    "rule_name": "Missing Age",
                     "severity": "Minor",
                     "count": 1,
                     "remediation": "Check birth date",
                 }
             ]
         ),
-        rule_counts={"DQA_INVALID_AGE": 1},
+        rule_counts={"missing_age": 1},
         severity_counts={"Minor": 1},
         has_critical=False,
         total_exceptions=1,
@@ -456,12 +456,12 @@ def test_exports_page_allows_download_when_dqa_exceptions_exist(tmp_path: Path):
     res = _build_test_pipeline_result(tmp_path)
     # Simulate Critical DQA exceptions present
     exc_df = pd.DataFrame(
-        [{"rule_id": "DQA_HIV_NEG_ON_ART", "severity": "Critical", "uic": "UIC-001"}]
+        [{"rule_id": "hiv_neg_on_art", "severity": "Critical", "uic": "UIC-001"}]
     )
     res.dqa_results = DQAResults(
         exceptions_df=exc_df,
         summary_df=pd.DataFrame(),
-        rule_counts={"DQA_HIV_NEG_ON_ART": 1},
+        rule_counts={"hiv_neg_on_art": 1},
         severity_counts={"Critical": 1},
         has_critical=True,
         total_exceptions=1,

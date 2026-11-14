@@ -60,37 +60,39 @@ def test_dqa_matches_ground_truth_on_synthetic_fsw():
 
     # Verify exact counts per planted defect
     # 1. Duplicate UIC: 3 clients duplicated, keep=False flags all 6 encounter rows
+    assert results.rule_counts.get("duplicate_uic", 0) == gt["duplicate_uic_encounters"] * 2
+    # Verify backward compatible alias
     assert results.rule_counts.get("DQA_DUPLICATE_UIC", 0) == gt["duplicate_uic_encounters"] * 2
 
     # 2. Missing County
-    assert results.rule_counts.get("DQA_MISSING_COUNTY", 0) == gt["missing_county"]
+    assert results.rule_counts.get("missing_county", 0) == gt["missing_county"]
 
     # 3. Missing SR Name (D-009)
-    assert results.rule_counts.get("DQA_MISSING_SR_NAME", 0) == gt["missing_sr_name"]
+    assert results.rule_counts.get("missing_sr_name", 0) == gt["missing_sr_name"]
 
     # 4. Missing Age
-    assert results.rule_counts.get("DQA_MISSING_AGE", 0) == gt["missing_age"]
+    assert results.rule_counts.get("missing_age", 0) == gt["missing_age"]
 
     # 5. Missing Sex
-    assert results.rule_counts.get("DQA_MISSING_SEX", 0) == gt["missing_sex"]
+    assert results.rule_counts.get("missing_sex", 0) == gt["missing_sex"]
 
     # 6. Negative on ART (D-014)
-    assert results.rule_counts.get("DQA_HIV_NEG_ON_ART", 0) == gt["negative_on_art"]
+    assert results.rule_counts.get("hiv_neg_on_art", 0) == gt["negative_on_art"]
 
     # 7. Positive not on ART (D-014)
-    assert results.rule_counts.get("DQA_HIV_POS_NO_ART", 0) == gt["positive_not_on_art"]
+    assert results.rule_counts.get("hiv_pos_no_art", 0) == gt["positive_not_on_art"]
 
     # 8. PrEP on Positive
-    assert results.rule_counts.get("DQA_PREP_ON_POSITIVE", 0) == gt["prep_in_positive"]
+    assert results.rule_counts.get("prep_on_positive", 0) == gt["prep_in_positive"]
 
     # 9. TB Diagnosed Without Screening (D-015)
-    assert results.rule_counts.get("DQA_TB_UNSCREENED", 0) == gt["tb_diagnosed_not_screened"]
+    assert results.rule_counts.get("tb_unscreened", 0) == gt["tb_diagnosed_not_screened"]
 
     # 10. STI Diagnosed Without Screening (D-016)
-    assert results.rule_counts.get("DQA_STI_UNSCREENED", 0) == gt["sti_diagnosed_not_screened"]
+    assert results.rule_counts.get("sti_unscreened", 0) == gt["sti_diagnosed_not_screened"]
 
     # 11. Cross-sheet CCC KPLHIV not in Register (D-018)
-    assert results.rule_counts.get("DQA_CCC_KPLHIV_NOT_REG", 0) == gt["ccc_kplhiv_not_in_register"]
+    assert results.rule_counts.get("ccc_kplhiv_not_reg", 0) == gt["ccc_kplhiv_not_in_register"]
 
 
 def test_dqa_matches_ground_truth_on_synthetic_pwid():
@@ -106,11 +108,11 @@ def test_dqa_matches_ground_truth_on_synthetic_pwid():
     results = run_dqa(reg_clean, kp_clean, population="PWID")
     gt = json.loads(gt_path.read_text(encoding="utf-8"))["planted_defects"]
 
-    assert results.rule_counts.get("DQA_DUPLICATE_UIC", 0) == gt["duplicate_uic_encounters"] * 2
-    assert results.rule_counts.get("DQA_MISSING_COUNTY", 0) == gt["missing_county"]
-    assert results.rule_counts.get("DQA_MISSING_SR_NAME", 0) == gt["missing_sr_name"]
-    assert results.rule_counts.get("DQA_HIV_NEG_ON_ART", 0) == gt["negative_on_art"]
-    assert results.rule_counts.get("DQA_PREP_ON_POSITIVE", 0) == gt["prep_in_positive"]
+    assert results.rule_counts.get("duplicate_uic", 0) == gt["duplicate_uic_encounters"] * 2
+    assert results.rule_counts.get("missing_county", 0) == gt["missing_county"]
+    assert results.rule_counts.get("missing_sr_name", 0) == gt["missing_sr_name"]
+    assert results.rule_counts.get("hiv_neg_on_art", 0) == gt["negative_on_art"]
+    assert results.rule_counts.get("prep_on_positive", 0) == gt["prep_in_positive"]
 
 
 # ---------------------------------------------------------------------------
@@ -159,12 +161,12 @@ def test_dqa_does_not_mutate_or_auto_resolve_records():
 # ---------------------------------------------------------------------------
 
 
-# Rule 1: DQA_DUPLICATE_UIC
+# Rule 1: duplicate_uic
 def test_rule_duplicate_uic_positive():
     df = pd.DataFrame({"kp_vp_unique_identifier_code": ["UIC01", "UIC01", "UIC02"]})
     exc = check_duplicate_uic(df)
     assert len(exc) == 2  # Both rows flagged per keep=False (D-017)
-    assert exc[0]["rule_id"] == "DQA_DUPLICATE_UIC"
+    assert exc[0]["rule_id"] == "duplicate_uic"
     assert exc[0]["severity"] == "Critical"
 
 
@@ -184,16 +186,16 @@ def test_rule_duplicate_uic_multi_row_edge():
     assert summary["duplicate_rows"] == 2
 
 
-# Rule 2: DQA_MISSING_UIC
+# Rule 2: missing_uic
 def test_rule_missing_uic_positive():
     df = pd.DataFrame({"kp_vp_unique_identifier_code": ["UIC01", None, "   "]})
-    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "DQA_MISSING_UIC")
+    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "missing_uic")
     assert len(exc) == 2
 
 
 def test_rule_missing_uic_negative():
     df = pd.DataFrame({"kp_vp_unique_identifier_code": ["UIC01", "UIC02"]})
-    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "DQA_MISSING_UIC")
+    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "missing_uic")
     assert len(exc) == 0
 
 
@@ -205,21 +207,21 @@ def test_rule_missing_uic_multi_row_edge():
             "date_of_enrolment": ["2024-01-01", "2024-02-01"],
         }
     )
-    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "DQA_MISSING_UIC")
+    exc = check_missing_demographic_field(df, "kp_vp_unique_identifier_code", "missing_uic")
     assert len(exc) == 1
     assert exc[0]["row_index"] == 1
 
 
-# Rule 3: DQA_MISSING_COUNTY
+# Rule 3: missing_county
 def test_rule_missing_county_positive():
     df = pd.DataFrame({"county": ["MOMBASA", None, ""]})
-    exc = check_missing_demographic_field(df, "county", "DQA_MISSING_COUNTY")
+    exc = check_missing_demographic_field(df, "county", "missing_county")
     assert len(exc) == 2
 
 
 def test_rule_missing_county_negative():
     df = pd.DataFrame({"county": ["MOMBASA", "KILIFI"]})
-    exc = check_missing_demographic_field(df, "county", "DQA_MISSING_COUNTY")
+    exc = check_missing_demographic_field(df, "county", "missing_county")
     assert len(exc) == 0
 
 
@@ -230,17 +232,17 @@ def test_rule_missing_county_multi_row_edge():
             "county": ["MOMBASA", None],
         }
     )
-    exc = check_missing_demographic_field(df, "county", "DQA_MISSING_COUNTY")
+    exc = check_missing_demographic_field(df, "county", "missing_county")
     assert len(exc) == 1
     assert exc[0]["row_index"] == 1
 
 
-# Rule 4: DQA_MISSING_SR_NAME
+# Rule 4: missing_sr_name
 def test_rule_missing_sr_name_positive():
     # Per D-009, 'Unknown' sentinel from ingestion is flagged as Critical
     df = pd.DataFrame({"sr_name": ["Partner A", "Unknown", None, "unknown"]})
     exc = check_missing_demographic_field(
-        df, "sr_name", "DQA_MISSING_SR_NAME", treat_unknown_as_missing=True
+        df, "sr_name", "missing_sr_name", treat_unknown_as_missing=True
     )
     assert len(exc) == 3
 
@@ -248,7 +250,7 @@ def test_rule_missing_sr_name_positive():
 def test_rule_missing_sr_name_negative():
     df = pd.DataFrame({"sr_name": ["Partner A", "Partner B"]})
     exc = check_missing_demographic_field(
-        df, "sr_name", "DQA_MISSING_SR_NAME", treat_unknown_as_missing=True
+        df, "sr_name", "missing_sr_name", treat_unknown_as_missing=True
     )
     assert len(exc) == 0
 
@@ -261,13 +263,13 @@ def test_rule_missing_sr_name_multi_row_edge():
         }
     )
     exc = check_missing_demographic_field(
-        df, "sr_name", "DQA_MISSING_SR_NAME", treat_unknown_as_missing=True
+        df, "sr_name", "missing_sr_name", treat_unknown_as_missing=True
     )
     assert len(exc) == 1
     assert exc[0]["row_index"] == 1
 
 
-# Rule 5: DQA_HIV_NEG_ON_ART
+# Rule 5: hiv_neg_on_art
 def test_rule_hiv_neg_on_art_positive():
     df = pd.DataFrame(
         {
@@ -278,7 +280,7 @@ def test_rule_hiv_neg_on_art_positive():
     )
     exc = check_hiv_neg_on_art(df)
     assert len(exc) == 1
-    assert exc[0]["rule_id"] == "DQA_HIV_NEG_ON_ART"
+    assert exc[0]["rule_id"] == "hiv_neg_on_art"
     assert exc[0]["severity"] == "Critical"
 
 
@@ -310,7 +312,7 @@ def test_rule_hiv_neg_on_art_multi_row_edge():
     assert "currently_on_art_y_n_n_a_2" in exc[0]["offending_columns"]
 
 
-# Rule 6: DQA_PREP_ON_POSITIVE
+# Rule 6: prep_on_positive
 def test_rule_prep_on_positive_positive():
     df = pd.DataFrame(
         {
@@ -321,7 +323,7 @@ def test_rule_prep_on_positive_positive():
     )
     exc = check_prep_on_positive(df)
     assert len(exc) == 1
-    assert exc[0]["rule_id"] == "DQA_PREP_ON_POSITIVE"
+    assert exc[0]["rule_id"] == "prep_on_positive"
     assert exc[0]["severity"] == "Critical"
 
 
@@ -351,7 +353,7 @@ def test_rule_prep_on_positive_multi_row_edge():
     assert len(exc) == 1
 
 
-# Rule 7: DQA_HIV_POS_NO_ART
+# Rule 7: hiv_pos_no_art
 def test_rule_hiv_pos_no_art_positive():
     df = pd.DataFrame(
         {
@@ -362,7 +364,7 @@ def test_rule_hiv_pos_no_art_positive():
     )
     exc = check_hiv_pos_no_art(df)
     assert len(exc) == 1
-    assert exc[0]["rule_id"] == "DQA_HIV_POS_NO_ART"
+    assert exc[0]["rule_id"] == "hiv_pos_no_art"
     assert exc[0]["severity"] == "Major"
 
 
@@ -391,7 +393,7 @@ def test_rule_hiv_pos_no_art_multi_row_edge():
     assert exc[0]["row_index"] == 1
 
 
-# Rule 8: DQA_TB_UNSCREENED
+# Rule 8: tb_unscreened
 def test_rule_tb_unscreened_positive():
     # Diagnosed Yes with screening explicitly No or null (D-015)
     df = pd.DataFrame(
@@ -403,7 +405,7 @@ def test_rule_tb_unscreened_positive():
     )
     exc = check_tb_unscreened(df)
     assert len(exc) == 2
-    assert exc[0]["rule_id"] == "DQA_TB_UNSCREENED"
+    assert exc[0]["rule_id"] == "tb_unscreened"
 
 
 def test_rule_tb_unscreened_negative():
@@ -433,7 +435,7 @@ def test_rule_tb_unscreened_multi_row_edge():
     assert "diagnosed_with_tb_2" in exc[0]["offending_columns"]
 
 
-# Rule 9: DQA_STI_UNSCREENED
+# Rule 9: sti_unscreened
 def test_rule_sti_unscreened_positive():
     df = pd.DataFrame(
         {
@@ -444,7 +446,7 @@ def test_rule_sti_unscreened_positive():
     )
     exc = check_sti_unscreened(df)
     assert len(exc) == 1
-    assert exc[0]["rule_id"] == "DQA_STI_UNSCREENED"
+    assert exc[0]["rule_id"] == "sti_unscreened"
 
 
 def test_rule_sti_unscreened_negative():
@@ -472,7 +474,7 @@ def test_rule_sti_unscreened_multi_row_edge():
     assert len(exc) == 1
 
 
-# Rule 10: DQA_MULTIPLE_PREP_INITIATIONS
+# Rule 10: multiple_prep_initiations
 def test_rule_multiple_prep_initiations_positive():
     df = pd.DataFrame(
         {
@@ -483,7 +485,7 @@ def test_rule_multiple_prep_initiations_positive():
     )
     exc = check_multiple_prep_initiations(df)
     assert len(exc) == 1
-    assert exc[0]["rule_id"] == "DQA_MULTIPLE_PREP_INITIATIONS"
+    assert exc[0]["rule_id"] == "multiple_prep_initiations"
 
 
 def test_rule_multiple_prep_initiations_negative():
@@ -512,7 +514,7 @@ def test_rule_multiple_prep_initiations_multi_row_edge():
     assert exc[0]["row_index"] == 1
 
 
-# Rule 11 & 12: DQA_CCC_REG_NOT_KPLHIV & DQA_CCC_KPLHIV_NOT_REG
+# Rule 11 & 12: ccc_reg_not_kplhiv & ccc_kplhiv_not_reg
 def test_rule_cross_sheet_ccc_positive():
     reg = pd.DataFrame(
         {
@@ -531,8 +533,8 @@ def test_rule_cross_sheet_ccc_positive():
     # 3333333333 in KPLHIV not in Register (Major)
     assert len(exc) == 2
     rule_ids = {e["rule_id"] for e in exc}
-    assert "DQA_CCC_REG_NOT_KPLHIV" in rule_ids
-    assert "DQA_CCC_KPLHIV_NOT_REG" in rule_ids
+    assert "ccc_reg_not_kplhiv" in rule_ids
+    assert "ccc_kplhiv_not_reg" in rule_ids
 
 
 def test_rule_cross_sheet_ccc_negative():
@@ -581,18 +583,18 @@ def test_demographic_rules_positive():
             "peer_educator_code": [None],
         }
     )
-    assert len(check_missing_demographic_field(df, "age", "DQA_MISSING_AGE")) == 1
-    assert len(check_missing_demographic_field(df, "sex_m_f_", "DQA_MISSING_SEX")) == 1
+    assert len(check_missing_demographic_field(df, "age", "missing_age")) == 1
+    assert len(check_missing_demographic_field(df, "sex_m_f_", "missing_sex")) == 1
     assert (
-        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "DQA_MISSING_DOB"))
+        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "missing_dob"))
         == 1
     )
     assert (
-        len(check_missing_demographic_field(df, "date_of_enrolment", "DQA_MISSING_ENROLMENT_DATE"))
+        len(check_missing_demographic_field(df, "date_of_enrolment", "missing_enrolment_date"))
         == 1
     )
     assert (
-        len(check_missing_demographic_field(df, "peer_educator_code", "DQA_MISSING_PE_CODE")) == 1
+        len(check_missing_demographic_field(df, "peer_educator_code", "missing_pe_code")) == 1
     )
 
 
@@ -606,18 +608,18 @@ def test_demographic_rules_negative():
             "peer_educator_code": ["PE01"],
         }
     )
-    assert len(check_missing_demographic_field(df, "age", "DQA_MISSING_AGE")) == 0
-    assert len(check_missing_demographic_field(df, "sex_m_f_", "DQA_MISSING_SEX")) == 0
+    assert len(check_missing_demographic_field(df, "age", "missing_age")) == 0
+    assert len(check_missing_demographic_field(df, "sex_m_f_", "missing_sex")) == 0
     assert (
-        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "DQA_MISSING_DOB"))
+        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "missing_dob"))
         == 0
     )
     assert (
-        len(check_missing_demographic_field(df, "date_of_enrolment", "DQA_MISSING_ENROLMENT_DATE"))
+        len(check_missing_demographic_field(df, "date_of_enrolment", "missing_enrolment_date"))
         == 0
     )
     assert (
-        len(check_missing_demographic_field(df, "peer_educator_code", "DQA_MISSING_PE_CODE")) == 0
+        len(check_missing_demographic_field(df, "peer_educator_code", "missing_pe_code")) == 0
     )
 
 
@@ -631,18 +633,18 @@ def test_demographic_rules_multi_row_edge():
             "peer_educator_code": ["PE01", "   "],
         }
     )
-    assert len(check_missing_demographic_field(df, "age", "DQA_MISSING_AGE")) == 1
-    assert len(check_missing_demographic_field(df, "sex_m_f_", "DQA_MISSING_SEX")) == 1
+    assert len(check_missing_demographic_field(df, "age", "missing_age")) == 1
+    assert len(check_missing_demographic_field(df, "sex_m_f_", "missing_sex")) == 1
     assert (
-        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "DQA_MISSING_DOB"))
+        len(check_missing_demographic_field(df, "date_of_birth_dd_mm_yyyy_", "missing_dob"))
         == 1
     )
     assert (
-        len(check_missing_demographic_field(df, "date_of_enrolment", "DQA_MISSING_ENROLMENT_DATE"))
+        len(check_missing_demographic_field(df, "date_of_enrolment", "missing_enrolment_date"))
         == 1
     )
     assert (
-        len(check_missing_demographic_field(df, "peer_educator_code", "DQA_MISSING_PE_CODE")) == 1
+        len(check_missing_demographic_field(df, "peer_educator_code", "missing_pe_code")) == 1
     )
 
 
@@ -677,8 +679,8 @@ def test_aggregate_report_contains_zero_client_identifiers():
     # Assert planted canary identifiers never appear in aggregate report text
     assert canary_uic not in report_text, "Planted UIC leaked into aggregate report!"
     assert canary_ccc not in report_text, "Planted CCC leaked into aggregate report!"
-    assert "DQA_DUPLICATE_UIC" in report_text
-    assert "DQA_MISSING_COUNTY" in report_text
+    assert "duplicate_uic" in report_text
+    assert "missing_county" in report_text
 
 
 # ---------------------------------------------------------------------------
@@ -692,6 +694,7 @@ def test_block_on_critical_detection():
     df_crit = pd.DataFrame({"kp_vp_unique_identifier_code": ["UIC01", "UIC01"]})
     res_crit = run_dqa(df_crit, population="FSW")
     assert res_crit.has_critical is True
+    assert "duplicate_uic" in res_crit.get_critical_counts()
     assert "DQA_DUPLICATE_UIC" in res_crit.get_critical_counts()
 
     # Major exception only (missing age)
