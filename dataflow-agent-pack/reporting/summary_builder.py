@@ -10,13 +10,13 @@ from reporting.template_manager import LayoutSpec, get_template_manager
 
 
 def _standardize_geography_value(val: object) -> str:
-    """Standardizes geography keys with Title Case, preserving (MISSING)."""
+    """Standardizes geography keys to UPPERCASE, preserving (MISSING)."""
     if pd.isna(val):
         return "(MISSING)"
     s = str(val).strip()
     if not s or s.upper() in ["NAN", "NONE", "(MISSING)", "MISSING"]:
         return "(MISSING)"
-    return s.title()
+    return s.upper()
 
 
 def build_export_summary(
@@ -112,7 +112,7 @@ def build_export_summary(
 
     # 7. Hierarchical sorting: County -> SR Name -> Region with (MISSING) at the bottom (D-037)
     def _sort_key(series: pd.Series) -> pd.Series:
-        return series.apply(lambda x: (1 if str(x) == "(MISSING)" else 0, str(x).lower()))
+        return series.apply(lambda x: (1 if str(x) == "(MISSING)" else 0, str(x).upper()))
 
     final_df = final_df.sort_values(
         by=key_cols,

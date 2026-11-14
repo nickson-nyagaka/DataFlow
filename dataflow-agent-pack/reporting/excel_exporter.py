@@ -156,6 +156,10 @@ def export_summary_sheet(
             col_name = layout_spec.all_columns[c_idx - 1]
             val = summary_df.at[r_idx, col_name] if col_name in summary_df.columns else 0
 
+            # Ensure demographic columns (County, SR Name, Region) are in UPPERCASE
+            if c_idx <= 3 and isinstance(val, str) and val != "(MISSING)":
+                val = val.upper()
+
             # Formatting
             cell = ws.cell(row=row_num, column=c_idx, value=val)
             cell.font = body_font

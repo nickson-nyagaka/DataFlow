@@ -119,7 +119,9 @@ def test_hierarchical_sorting_with_missing_at_bottom() -> None:
 
     summary = build_export_summary(reg_df, kp_df, population="FSW", period_mode="SEM")
     assert summary["county"].iloc[-1] == "(MISSING)"
-    assert list(summary["county"].iloc[:-1]) == ["Kisumu", "Mombasa", "Nairobi"]
+    assert list(summary["county"].iloc[:-1]) == ["KISUMU", "MOMBASA", "NAIROBI"]
+    assert list(summary["sr_name"].iloc[:-1]) == ["SR C", "SR A", "SR A"]
+    assert list(summary["region"].iloc[:-1]) == ["WEST", "COAST", "CENTRAL"]
 
 
 def test_pwid_total_nsp_sem_calculated(
