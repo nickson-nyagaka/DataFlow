@@ -146,6 +146,15 @@ def load_population_config(
     if not p.exists() and not str(path_or_population).endswith((".yaml", ".yml")):
         p = Path(config_dir) / f"{str(path_or_population).lower()}.yaml"
 
+    if not p.exists():
+        # Fallback to package root resolution
+        pkg_root = Path(__file__).resolve().parent.parent
+        candidate = pkg_root / config_dir / f"{str(path_or_population).lower()}.yaml"
+        if candidate.exists():
+            p = candidate
+        elif (pkg_root / p).exists():
+            p = pkg_root / p
+
     raw = load_yaml(p)
     try:
         return PopulationConfig.model_validate(raw)

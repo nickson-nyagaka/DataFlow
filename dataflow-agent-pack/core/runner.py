@@ -25,6 +25,7 @@ from analytics.engine import run_analytics
 from analytics.kplhiv import compute_kplhiv_summary, process_kplhiv_frame
 from core.cleaning import clean_kplhiv_frame, clean_register_frame
 from core.config_models import load_population_config
+from core.exceptions import ProcessingStageError
 from core.ingestion import ingest_workbook
 from core.progress_manager import ProgressManager
 from core.validation import RULE_DEFINITIONS, DQAResults, run_dqa
@@ -85,10 +86,20 @@ def compute_config_hash(
     sha.update(period_mode.encode("utf-8"))
 
     pop_file = Path(config_dir) / f"{population.lower()}.yaml"
+    if not pop_file.exists():
+        pkg_root = Path(__file__).resolve().parent.parent
+        candidate = pkg_root / config_dir / f"{population.lower()}.yaml"
+        if candidate.exists():
+            pop_file = candidate
     if pop_file.exists():
         sha.update(pop_file.read_bytes())
 
     tmpl_file = Path("config/reporting/excel_templates.yaml")
+    if not tmpl_file.exists():
+        pkg_root = Path(__file__).resolve().parent.parent
+        candidate = pkg_root / "config/reporting/excel_templates.yaml"
+        if candidate.exists():
+            tmpl_file = candidate
     if tmpl_file.exists():
         sha.update(tmpl_file.read_bytes())
 
@@ -145,6 +156,7 @@ def run_full_pipeline(
             for s_id in ["ingestion", "cleaning", "dqa", "analytics", "reporting"]:
                 pm.complete_stage(s_id, "Completed (Retrieved from cache)")
             cached.progress_snapshot = pm.snapshot()
+            write_run_metadata(cached)
             return cached
 
     # Save bytes to temporary file if bytes provided
@@ -163,6 +175,7 @@ def run_full_pipeline(
         pm.start_stage("ingestion", f"Ingesting {population} register and KPLHIV worksheets...")
         t0 = time.perf_counter()
         pop_config = load_population_config(population, config_dir=config_dir)
+        pm.update_progress("ingestion", 30.0, f"Parsing {population} workbook worksheets via Calamine engine...")
         reg_raw, kp_raw, audit = ingest_workbook(work_path, pop_config)
         stage_timings["ingestion"] = round(time.perf_counter() - t0, 3)
         pm.complete_stage(
@@ -178,8 +191,9 @@ def run_full_pipeline(
         # Stage 2: Cleaning
         pm.start_stage("cleaning", "Applying vectorized cleaning and missing geography standardization...")
         t0 = time.perf_counter()
+        pm.update_progress("cleaning", 25.0, "Standardizing dates (DD/MM/YYYY) and demographics...")
         reg_clean = clean_register_frame(reg_raw)
-        pm.update_progress("cleaning", 50.0, "Cleaning KPLHIV records...", completed_op="Register cleaning completed")
+        pm.update_progress("cleaning", 65.0, "Standardizing geographic hierarchy (County, Sub-County, Ward)...", completed_op="Register cleaning completed")
         kp_clean = clean_kplhiv_frame(kp_raw) if not kp_raw.empty else kp_raw
         stage_timings["cleaning"] = round(time.perf_counter() - t0, 3)
         pm.complete_stage(
@@ -192,6 +206,7 @@ def run_full_pipeline(
         rule_count = len(RULE_DEFINITIONS)
         pm.start_stage("dqa", f"Evaluating {rule_count} DQA rules across demographic and clinical fields...")
         t0 = time.perf_counter()
+        pm.update_progress("dqa", 35.0, "Auditing demographic, clinical, and commodity validation rules...")
         dqa_results = run_dqa(
             reg_clean,
             kp_clean,
@@ -214,6 +229,7 @@ def run_full_pipeline(
         # Stage 4: Analytical Calculations
         pm.start_stage("analytics", f"Calculating cascade indicators and service metrics for {population}...")
         t0 = time.perf_counter()
+        pm.update_progress("analytics", 25.0, "Computing HTS testing cascade, PrEP continuum, and ART suppression...")
         analytics_dict = run_analytics(reg_clean, kp_clean, population=population)
         reg_analyzed = analytics_dict.get("cleaned_register", reg_clean)
         kp_analyzed = analytics_dict.get("cleaned_kplhiv", kp_clean)
@@ -227,7 +243,7 @@ def run_full_pipeline(
             kp_summary_df = pd.DataFrame()
             active_kplhiv = 0
 
-        pm.update_progress("analytics", 70.0, "Compiling summary tables and age/sex disaggregations...")
+        pm.update_progress("analytics", 65.0, "Compiling summary tables and regional performance rankings...")
         # Build standardized summary table with (MISSING) retention
         summary_df = build_export_summary(
             cleaned_register=reg_analyzed,
@@ -235,6 +251,7 @@ def run_full_pipeline(
             population=population,
             period_mode=period_mode,
         )
+        pm.update_progress("analytics", 85.0, "Computing KPI Age x Sex cross-disaggregation matrix...")
         # Compute KPI age x sex disaggregation summary
         kpi_summary_df = compute_kpi_demographic_summary(
             reg_analyzed,
@@ -251,6 +268,7 @@ def run_full_pipeline(
         # Stage 5: Reporting Package Generation
         pm.start_stage("reporting", "Assembling Master Multi-Tab Excel Workbook and Modular ZIP Package...")
         t0 = time.perf_counter()
+        pm.update_progress("reporting", 25.0, "Formatting summary tabs, indicators, and DQA registry...")
         package_paths = build_reporting_package(
             cleaned_register=reg_analyzed,
             cleaned_kplhiv=kp_analyzed,
@@ -262,6 +280,7 @@ def run_full_pipeline(
             mask_identifiers=mask_identifiers,
             provisional_indicators=provisional_indicators,
         )
+        pm.update_progress("reporting", 85.0, "Packaging modular ZIP files and generating SHA-256 manifest...")
         stage_timings["reporting"] = round(time.perf_counter() - t0, 3)
         pm.complete_stage(
             "reporting",
@@ -286,6 +305,7 @@ def run_full_pipeline(
             total_cohort=total_cohort,
             active_kplhiv=active_kplhiv,
             kpi_summary_df=kpi_summary_df,
+            dqa_results=dqa_results,
         )
 
         ts = datetime.now(UTC).isoformat()
@@ -326,6 +346,13 @@ def run_full_pipeline(
 
     except Exception as exc:
         active_stage = "ingestion"
+        stage_titles = {
+            "ingestion": ("Stage 1: Workbook Ingestion", "File reading and worksheet ingestion"),
+            "cleaning": ("Stage 2: Data Cleaning & Normalization", "Vectorized cleaning and date standardization"),
+            "dqa": ("Stage 3: Data Quality Assessment (DQA)", "Evaluating demographic and clinical validation rules"),
+            "analytics": ("Stage 4: Analytical Calculations", "Calculating cascade indicators and service metrics"),
+            "reporting": ("Stage 5: Reporting Package Assembly", "Assembling Master workbook & ZIP package"),
+        }
         if "ingestion" in stage_timings:
             active_stage = "cleaning"
         if "cleaning" in stage_timings:
@@ -334,13 +361,34 @@ def run_full_pipeline(
             active_stage = "analytics"
         if "analytics" in stage_timings:
             active_stage = "reporting"
+
         pm.fail_stage(active_stage, str(exc))
-        raise exc
+
+        if isinstance(exc, ProcessingStageError):
+            raise exc
+
+        import traceback
+        tb_str = traceback.format_exc()
+        stage_name, op_desc = stage_titles.get(active_stage, (f"Stage: {active_stage}", "Pipeline execution"))
+
+        wrapped_err = ProcessingStageError(
+            stage=stage_name,
+            operation=op_desc,
+            problem=str(exc),
+            recommended_action=(
+                "1. Open your Excel workbook.\n"
+                "2. Check that dates, IDs, and indicators conform strictly to the DataFlow template.\n"
+                "3. Ensure there are no unexpected text strings in numeric columns.\n"
+                "4. Save and re-upload the workbook."
+            ),
+            likely_cause="An unhandled data structure anomaly or invalid data type was encountered during processing.",
+            technical_details=tb_str,
+        )
+        raise wrapped_err from exc
 
     finally:
-        # Clean up temporary uploaded file if created
-        if temp_file and temp_file.exists():
-            temp_file.unlink(missing_ok=True)
+        # Preserve raw uploaded file in runtime/temporary for the active session per requirements
+        pass
 
 
 def write_run_metadata(result: PipelineResult, path: Path | str = RUN_METADATA_PATH) -> None:

@@ -101,7 +101,7 @@ def test_property_client_grain_le_total_cohort(df: pd.DataFrame):
         assert row["HTSQ2"] <= total
         assert row["HTS_SEM"] <= total
         assert row["PREP_Q1"] <= total
-        assert row["PREP_SEM"] <= total
+        assert row["PREP_SEM"] <= 2 * total
         assert row["DefinedPackage_Q1"] <= total
         assert row["DefinedPackage_SEM"] <= total
 
@@ -117,9 +117,9 @@ def test_property_q1_subset_of_semester(df: pd.DataFrame):
     q1_tested = cleaned[cleaned["hts_q1"] == 1]
     assert (q1_tested["hts_sem"] == 1).all()
 
-    # prep_q1 == 1 implies prep_sem == 1
+    # prep_q1 == 1 implies prep_sem >= 1 (prep_sem = prep_q1 + prep_q2)
     q1_prep = cleaned[cleaned["prep_q1"] == 1]
-    assert (q1_prep["prep_sem"] == 1).all()
+    assert (q1_prep["prep_sem"] >= 1).all()
 
 
 @settings(max_examples=25, deadline=None)

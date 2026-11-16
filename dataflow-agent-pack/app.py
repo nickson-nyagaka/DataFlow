@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import streamlit as st
 
-from core.workflow_manager import WorkflowStage, get_workflow_checklist
+from core.workflow_manager import WorkflowStage, can_access_page, get_workflow_checklist
 from ui.session import get_current_workflow_stage, init_session_state, reset_session
 
 st.set_page_config(
@@ -48,8 +48,8 @@ with st.sidebar:
 
     st.markdown("#### 🧭 Active Session")
     current_stage = get_current_workflow_stage()
-    pop = st.session_state.get("population", "FSW")
-    per = st.session_state.get("period_mode", "SEM")
+    pop = st.session_state.get("population")
+    per = st.session_state.get("period_mode")
     fname = st.session_state.get("uploaded_file_name", "")
     has_active_session = current_stage != WorkflowStage.EMPTY or bool(fname)
 
@@ -69,8 +69,8 @@ with st.sidebar:
         }.get(current_stage, "gray")
 
         st.markdown(f"**Status:** :{badge_color}[{current_stage.value.upper()}]")
-        st.markdown(f"**Population:** `{pop}`")
-        st.markdown(f"**Period:** `{per}`")
+        st.markdown(f"**Population:** `{pop if pop else 'Not Selected'}`")
+        st.markdown(f"**Period:** `{per if per else 'Not Selected'}`")
 
         if fname:
             short_name = f"{fname[:18]}..." if len(fname) > 18 else fname
@@ -118,6 +118,35 @@ with st.sidebar:
 
     st.divider()
     st.caption("🔒 Kenya KP Data Standard\nLocalhost 127.0.0.1 Binding")
+
+# Visually disable locked navigation links in the sidebar per Master Brief §4 & §5
+workflow_page_rules = [
+    ("Processing", "processing"),
+    ("Data Quality", "data_quality"),
+    ("Dashboard", "dashboard"),
+    ("Analytics", "analytics"),
+    ("Export Reports", "exports"),
+]
+locked_selectors = []
+for p_title, file_slug in workflow_page_rules:
+    if not can_access_page(p_title, current_stage):
+        locked_selectors.append(f'a[data-testid="stSidebarNavLink"][href*="{file_slug}"]')
+
+if locked_selectors:
+    css_rules = ",\n".join(locked_selectors)
+    st.markdown(
+        f"""
+        <style>
+        {css_rules} {{
+            opacity: 0.35 !important;
+            pointer-events: none !important;
+            cursor: not-allowed !important;
+            filter: grayscale(80%) !important;
+        }}
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # Run navigation
 pg = st.navigation(pages)

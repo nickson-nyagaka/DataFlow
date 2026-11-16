@@ -15,6 +15,8 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
+from core.exceptions import ProcessingStageError
+
 
 def clean_string_series(series: pd.Series) -> pd.Series:
     """Strips leading/trailing whitespace and collapses internal multiple spaces."""
@@ -74,21 +76,30 @@ def parse_date_series(series: pd.Series) -> pd.Series:
 
     # Check numeric serials (e.g. 45123 or 37422)
     is_num = s_non_iso.str.replace(r"\.0+$", "", regex=True).str.isdigit()
-    dt_serials = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[ns]")
+    dt_serials = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[s]")
     if is_num.any():
         serials = pd.to_numeric(s_non_iso[is_num].str.replace(r"\.0+$", "", regex=True), errors="coerce")
         dt_serials.update(pd.to_datetime(serials, unit="D", origin="1899-12-30", errors="coerce"))
 
     # For remaining non-numeric non-ISO strings, try dayfirst=True
     non_num = ~is_num
-    dt_dayfirst = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[ns]")
+    dt_dayfirst = pd.Series(pd.NaT, index=s_non_iso.index, dtype="datetime64[s]")
     if non_num.any():
-        dt_dayfirst.update(pd.to_datetime(s_non_iso[non_num], dayfirst=True, errors="coerce", format="mixed"))
+        try:
+            parsed_df = pd.to_datetime(s_non_iso[non_num], dayfirst=True, errors="coerce", format="mixed")
+            dt_dayfirst.update(parsed_df)
+        except Exception:
+            # Fallback for individual elements if batch conversion fails
+            for idx, val in s_non_iso[non_num].items():
+                try:
+                    dt_dayfirst.loc[idx] = pd.to_datetime(val, dayfirst=True, errors="coerce")
+                except Exception:
+                    dt_dayfirst.loc[idx] = pd.NaT
 
     combined_non_iso = dt_serials.combine_first(dt_dayfirst)
 
-    # Combine ISO and non-ISO results
-    combined_dt = pd.Series(pd.NaT, index=series.index, dtype="datetime64[ns]")
+    # Combine ISO and non-ISO results using second resolution to prevent nanosecond overflow (D-011)
+    combined_dt = pd.Series(pd.NaT, index=series.index, dtype="datetime64[s]")
     if is_iso.any():
         combined_dt.update(dt_iso)
     if non_iso.any():
@@ -112,84 +123,113 @@ def clean_register_frame(
     - Dates parsed to YYYY-MM-DD strings with dayfirst=True per D-011.
     - Controlled vocabularies normalized per D-008.
     """
-    cleaned = df.copy(deep=True)
+    try:
+        cleaned = df.copy(deep=True)
 
-    # 1. Clean whitespace across all string columns
-    for col in cleaned.columns:
-        cleaned[col] = clean_string_series(cleaned[col])
+        # 1. Clean whitespace across all string columns
+        for col in cleaned.columns:
+            cleaned[col] = clean_string_series(cleaned[col])
 
-    # 2. Clean IDs (preserve leading zeros, strip trailing .0)
-    id_cols = [
-        "kp_vp_unique_identifier_code",
-        "ccc_number_nupi_n_a_10_digit_number_",
-        "peer_educator_code",
-    ]
-    for col in id_cols:
-        if col in cleaned.columns:
-            cleaned[col] = clean_numeric_id_series(cleaned[col])
+        # 2. Clean IDs (preserve leading zeros, strip trailing .0)
+        id_cols = [
+            "kp_vp_unique_identifier_code",
+            "ccc_number_nupi_n_a_10_digit_number_",
+            "peer_educator_code",
+        ]
+        for col in id_cols:
+            if col in cleaned.columns:
+                cleaned[col] = clean_numeric_id_series(cleaned[col])
 
-    # 3. Handle missing Sub-Recipient (sr_name) per D-009
-    if "sr_name" in cleaned.columns:
-        cleaned["sr_name"] = cleaned["sr_name"].fillna("Unknown")
-    else:
-        cleaned["sr_name"] = "Unknown"
+        # 3. Handle missing Sub-Recipient (sr_name) per D-009
+        if "sr_name" in cleaned.columns:
+            cleaned["sr_name"] = cleaned["sr_name"].fillna("Unknown")
+        else:
+            cleaned["sr_name"] = "Unknown"
 
-    # 4. Parse Dates (enrolment, DOB, visit dates) per D-011
-    date_cols = [
-        col
-        for col in cleaned.columns
-        if any(token in col.lower() for token in ["date", "dob", "enrolment"])
-    ]
-    for col in date_cols:
-        cleaned[col] = parse_date_series(cleaned[col])
+        # 4. Parse Dates (enrolment, DOB, visit dates) per D-011
+        date_cols = [
+            col
+            for col in cleaned.columns
+            if any(token in col.lower() for token in ["date", "dob", "enrolment"])
+        ]
+        for col in date_cols:
+            cleaned[col] = parse_date_series(cleaned[col])
 
-    # 5. Normalize Age per D-003 (never default; coerce invalid to NaN)
-    if "age" in cleaned.columns:
-        cleaned["age"] = pd.to_numeric(cleaned["age"], errors="coerce")
+        # 5. Normalize Age per D-003 (never default; coerce invalid to NaN)
+        if "age" in cleaned.columns:
+            cleaned["age"] = pd.to_numeric(cleaned["age"], errors="coerce")
 
-    # 6. Apply Controlled Vocabularies
-    if vocabularies:
-        # HIV Status
-        hiv_variants = vocabularies.get("hiv_status", {})
-        if hiv_variants and "hiv_status_at_enrollment" in cleaned.columns:
-            cleaned["hiv_status_at_enrollment"] = normalize_vocabulary_series(
-                cleaned["hiv_status_at_enrollment"], hiv_variants
-            )
+        # 6. Apply Controlled Vocabularies
+        if vocabularies:
+            # HIV Status
+            hiv_variants = vocabularies.get("hiv_status", {})
+            if hiv_variants and "hiv_status_at_enrollment" in cleaned.columns:
+                cleaned["hiv_status_at_enrollment"] = normalize_vocabulary_series(
+                    cleaned["hiv_status_at_enrollment"], hiv_variants
+                )
 
-        # PrEP Status columns (e.g. prep_status_1, prep_status_2, etc.)
-        prep_variants = vocabularies.get("prep_status", {})
-        if prep_variants:
-            for col in cleaned.columns:
-                if "prep_status" in col.lower():
-                    cleaned[col] = normalize_vocabulary_series(cleaned[col], prep_variants)
+            # PrEP Status columns (e.g. prep_status_1, prep_status_2, etc.)
+            prep_variants = vocabularies.get("prep_status", {})
+            if prep_variants:
+                for col in cleaned.columns:
+                    if "prep_status" in col.lower():
+                        cleaned[col] = normalize_vocabulary_series(cleaned[col], prep_variants)
 
-        # Yes/No columns
-        yes_no_variants = vocabularies.get("yes_no", {})
-        if yes_no_variants:
-            yn_patterns = ["art", "tb_screened", "sti_screened", "diagnosed", "presumed"]
-            for col in cleaned.columns:
-                if any(p in col.lower() for p in yn_patterns):
-                    cleaned[col] = normalize_vocabulary_series(cleaned[col], yes_no_variants)
+            # Yes/No columns
+            yes_no_variants = vocabularies.get("yes_no", {})
+            if yes_no_variants:
+                yn_patterns = ["art", "tb_screened", "sti_screened", "diagnosed", "presumed"]
+                for col in cleaned.columns:
+                    if any(p in col.lower() for p in yn_patterns):
+                        cleaned[col] = normalize_vocabulary_series(cleaned[col], yes_no_variants)
 
-    return cleaned
+        return cleaned
+    except ProcessingStageError:
+        raise
+    except Exception as exc:
+        raise ProcessingStageError(
+            stage="Stage 2: Data Cleaning & Normalization",
+            operation="Register standardisation",
+            worksheet="Register",
+            problem=str(exc),
+            likely_cause="A column contains unexpected data types or cell values incompatible with standard cleaning transformations.",
+            recommended_action=(
+                "1. Open your Excel workbook and inspect the 'Register' worksheet.\n"
+                "2. Check that date columns use DD/MM/YYYY or standard ISO dates.\n"
+                "3. Ensure numeric fields (such as Age) contain valid numbers without extraneous text.\n"
+                "4. Save and re-upload the workbook."
+            ),
+        ) from exc
 
 
 def clean_kplhiv_frame(df: pd.DataFrame) -> pd.DataFrame:
     """Cleans a KPLHIV DataFrame without modifying the input frame in place."""
-    cleaned = df.copy(deep=True)
+    try:
+        cleaned = df.copy(deep=True)
 
-    for col in cleaned.columns:
-        cleaned[col] = clean_string_series(cleaned[col])
+        for col in cleaned.columns:
+            cleaned[col] = clean_string_series(cleaned[col])
 
-    id_cols = [
-        "kp_vp_unique_identifier_code",
-        "ccc_number_nupi_n_a_10_digit_number_",
-    ]
-    for col in id_cols:
-        if col in cleaned.columns:
-            cleaned[col] = clean_numeric_id_series(cleaned[col])
+        id_cols = [
+            "kp_vp_unique_identifier_code",
+            "ccc_number_nupi_n_a_10_digit_number_",
+        ]
+        for col in id_cols:
+            if col in cleaned.columns:
+                cleaned[col] = clean_numeric_id_series(cleaned[col])
 
-    if "age" in cleaned.columns:
-        cleaned["age"] = pd.to_numeric(cleaned["age"], errors="coerce")
+        if "age" in cleaned.columns:
+            cleaned["age"] = pd.to_numeric(cleaned["age"], errors="coerce")
 
-    return cleaned
+        return cleaned
+    except ProcessingStageError:
+        raise
+    except Exception as exc:
+        raise ProcessingStageError(
+            stage="Stage 2: Data Cleaning & Normalization",
+            operation="KPLHIV standardisation",
+            worksheet="KPLHIV",
+            problem=str(exc),
+            likely_cause="The KPLHIV sheet contains unexpected values or unsupported structure.",
+            recommended_action="Inspect the KPLHIV sheet in Excel, verify column headers and values, then re-upload.",
+        ) from exc

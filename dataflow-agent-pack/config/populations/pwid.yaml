@@ -17,6 +17,6 @@ defined_package:
 
 reporting:
   include_nsp_block: true
-  sheet_name_q1: "PWID_Summary"
-  sheet_name_sem: "PWID_Summary"
+  sheet_name_q1: "PWID_Summary_Q1"
+  sheet_name_sem: "PWID_Summary_SEM"
 

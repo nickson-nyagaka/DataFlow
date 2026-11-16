@@ -13,7 +13,7 @@ import pandas as pd
 
 from core.audit import SheetAudit, WorkbookAudit
 from core.config_models import PopulationConfig
-from core.exceptions import IngestionError
+from core.exceptions import IngestionError, ProcessingStageError
 
 # Standard anchor columns used to auto-detect the header row in messy workbooks
 ANCHOR_COLUMNS = {
@@ -159,9 +159,20 @@ def detect_sheet_name(available_sheets: list[str], aliases: list[str], sheet_typ
         if norm_alias in normalized_available:
             return normalized_available[norm_alias]
 
-    raise IngestionError(
-        f"Missing required sheet: '{sheet_type}'. Looked for aliases: {aliases}. "
-        f"Available sheets: {available_sheets}"
+    alias_desc = ", ".join(f"'{a}'" for a in aliases[:4])
+    raise ProcessingStageError(
+        stage="Stage 1: Workbook Ingestion",
+        operation="Required Worksheet Auto-detection",
+        worksheet=sheet_type,
+        problem=f"Workbook does not contain the required '{sheet_type}' worksheet.",
+        likely_cause=f"Available worksheets {available_sheets} do not match approved aliases: [{alias_desc}].",
+        recommended_action=(
+            f"1. Open your Excel workbook.\n"
+            f"2. Ensure it contains a worksheet named '{sheet_type}' (or '{aliases[0]}').\n"
+            f"3. Ensure the worksheet name is spelled correctly without extra leading or trailing spaces.\n"
+            f"4. Save the workbook and upload it again."
+        ),
+        technical_details=f"Available sheets: {available_sheets}; Looked for aliases: {aliases}",
     )
 
 
@@ -175,11 +186,10 @@ def detect_header_skiprows(
     ext = file_path.suffix.lower()
     engine = (
         "calamine"
-        if ext in [".xlsb", ".xls"]
-        else ("openpyxl" if ext in [".xlsx", ".xlsm"] else None)
+        if ext in [".xlsb", ".xls", ".xlsx", ".xlsm"]
+        else None
     )
 
-    engine_kwargs = {"read_only": True} if engine == "openpyxl" else None
     try:
         if ext == ".csv":
             df_preview = pd.read_csv(file_path, header=None, nrows=max_scan_rows, dtype=str)
@@ -191,21 +201,18 @@ def detect_header_skiprows(
                     header=None,
                     nrows=max_scan_rows,
                     engine=engine,
-                    engine_kwargs=engine_kwargs,
                     dtype=str,
                 )
             except Exception:
-                if engine == "openpyxl":
-                    df_preview = pd.read_excel(
-                        file_path,
-                        sheet_name=sheet_name,
-                        header=None,
-                        nrows=max_scan_rows,
-                        engine="calamine",
-                        dtype=str,
-                    )
-                else:
-                    raise
+                df_preview = pd.read_excel(
+                    file_path,
+                    sheet_name=sheet_name,
+                    header=None,
+                    nrows=max_scan_rows,
+                    engine="openpyxl" if ext in [".xlsx", ".xlsm"] else None,
+                    engine_kwargs={"read_only": True} if ext in [".xlsx", ".xlsm"] else None,
+                    dtype=str,
+                )
     except Exception as exc:
         raise IngestionError(f"Failed to read sheet preview for '{sheet_name}': {exc}") from exc
 
@@ -255,8 +262,14 @@ def resolve_column_aliases(
         candidates = normalized_alias_lookup.get(norm_raw, [])
 
         if len(candidates) > 1:
-            raise IngestionError(
-                f"Ambiguous column alias: column '{raw_col}' matches multiple canonical targets: {sorted(candidates)}"
+            raise ProcessingStageError(
+                stage="Stage 1: Workbook Ingestion",
+                operation="Column Alias Disambiguation",
+                column=raw_col,
+                problem=f"Column '{raw_col}' is ambiguous and matches multiple canonical targets: {sorted(candidates)}.",
+                likely_cause="The column header contains keywords shared across multiple indicator definitions.",
+                recommended_action=f"Rename column '{raw_col}' in Excel to match the precise template column name.",
+                technical_details=f"Candidates: {sorted(candidates)}",
             )
         elif len(candidates) == 1:
             canonical = candidates[0]
@@ -297,14 +310,35 @@ def resolve_column_aliases(
         else:
             err_details = [f"canonical '{canonical}' matched by columns {sorted(best_candidates)}"]
             sep = "; "
-            raise IngestionError(f"Ambiguous duplicate column mapping: {sep.join(err_details)}")
+            raise ProcessingStageError(
+                stage="Stage 1: Workbook Ingestion",
+                operation="Duplicate Column Resolution",
+                column=canonical,
+                problem=f"Ambiguous duplicate column mapping: {sep.join(err_details)}.",
+                likely_cause="Multiple columns in the sheet appear to provide the same data.",
+                recommended_action=f"Review columns {sorted(best_candidates)} in Excel and ensure each column has a distinct name.",
+                technical_details=f"Columns: {sorted(best_candidates)} -> target: {canonical}",
+            )
 
     # Check required columns if provided
     if required_columns:
         resolved_canonicals = set(resolved_mapping.values())
         missing = [req for req in required_columns if req not in resolved_canonicals]
         if missing:
-            raise IngestionError(f"Missing required columns in sheet: {sorted(missing)}")
+            raise ProcessingStageError(
+                stage="Stage 1: Workbook Ingestion",
+                operation="Required Columns Verification",
+                column=", ".join(missing),
+                problem=f"Required columns missing from worksheet: {', '.join(missing)}.",
+                likely_cause="The worksheet headers are displaced, missing, or renamed.",
+                recommended_action=(
+                    f"1. Open your Excel workbook.\n"
+                    f"2. Ensure row 3 contains column headers for: {', '.join(missing)}.\n"
+                    f"3. Check the workbook against the approved DataFlow template and restore the missing columns.\n"
+                    f"4. Save and re-upload the workbook."
+                ),
+                technical_details=f"Missing: {missing}; Resolved columns: {sorted(resolved_canonicals)}",
+            )
 
     return resolved_mapping
 
@@ -414,6 +448,20 @@ def ingest_workbook(
 
     # 3. Load sheets with string preservation (D-010)
     reg_df, reg_rows_in, reg_dropped_empty = load_sheet_frame(p, reg_sheet, reg_skiprows)
+    if reg_df.empty:
+        raise ProcessingStageError(
+            stage="Stage 1: Workbook Ingestion",
+            operation="Register Worksheet Data Loading",
+            worksheet=reg_sheet,
+            problem=f"The '{reg_sheet}' worksheet contains zero client records.",
+            likely_cause="All rows below the header row are completely blank or data was not saved.",
+            recommended_action=(
+                f"1. Open your Excel workbook.\n"
+                f"2. Inspect worksheet '{reg_sheet}'.\n"
+                f"3. Ensure client encounter records are pasted below the header row (starting row {reg_skiprows + 2}).\n"
+                f"4. Save and re-upload the workbook."
+            ),
+        )
     kp_df, kp_rows_in, kp_dropped_empty = load_sheet_frame(p, kp_sheet, kp_skiprows)
 
     # 4. Resolve column aliases

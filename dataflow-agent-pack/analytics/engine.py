@@ -11,7 +11,7 @@ import pandas as pd
 from analytics.art import compute_art_indicators
 from analytics.condoms import compute_condom_indicators
 from analytics.defined_package import compute_defined_package_indicators
-from analytics.demographics import compute_age_group_counts
+from analytics.demographics import assign_age_groups, compute_age_group_counts
 from analytics.he_rrc import compute_he_rrc_indicators
 from analytics.hts import compute_hts_indicators
 from analytics.kplhiv import compute_kplhiv_summary, process_kplhiv_frame
@@ -86,6 +86,8 @@ def run_analytics(
     summary_kp = compute_kplhiv_summary(kp)
 
     # 3. Demographic pivots
+    if "age_group" not in reg.columns:
+        reg["age_group"] = assign_age_groups(reg, compat=compat)
     age_counts = compute_age_group_counts(reg, compat=compat)
 
     # 4. Register summary

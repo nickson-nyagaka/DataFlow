@@ -1,8 +1,8 @@
 code: "MSM"
 name: "Men who have Sex with Men"
 sheet_aliases_register:
-  - "MSM"
   - "Register"
+  - "MSM"
 sheet_aliases_kplhiv:
   - "KPLHIV"
 header_skiprows: 2
@@ -17,6 +17,6 @@ defined_package:
 
 reporting:
   include_nsp_block: false
-  sheet_name_q1: "KP_Summary"
-  sheet_name_sem: "Summary"
+  sheet_name_q1: "MSM_Summary_Q1"
+  sheet_name_sem: "MSM_Summary_SEM"
 

@@ -14,8 +14,8 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
     """Computes PrEP indicators on a cleaned Register DataFrame.
 
     Indicators:
-    - prep_q1, prep_refill_q1, prep_initiate_q1, prep_disc_q1
-    - prep_q2, prep_refill_q2, prep_initiate_q2, prep_disc_q2
+    - prep_q1, prep_refill_q1, prep_initiate_q1, prep_switched_q1, prep_disc_q1
+    - prep_q2, prep_refill_q2, prep_initiate_q2, prep_switched_q2, prep_disc_q2
     - prep_sem
     """
     res = df.copy()
@@ -30,22 +30,32 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
             "prep_q1",
             "prep_refill_q1",
             "prep_initiate_q1",
+            "prep_switched_q1",
             "prep_disc_q1",
             "prep_q2",
             "prep_refill_q2",
             "prep_initiate_q2",
+            "prep_switched_q2",
             "prep_disc_q2",
             "prep_sem",
         ]:
             res[col] = 0
         return res
 
-    active_prep = ["Initiated", "Restart", "Switched", "Refill", "initiated", "restart", "switched", "refill"]
-    refill_variants = ["Refill", "refill"]
+    active_prep = [
+        "Initiated", "Restart", "Restarted", "Switched", "Switch", "Refill", "Refilled",
+        "initiated", "restart", "restarted", "switched", "switch", "refill", "refilled",
+    ]
+    refill_variants = [
+        "Refill", "refill", "Refilled", "refilled",
+    ]
+    switched_variants = [
+        "Switched", "switched", "Switch", "switch",
+    ]
     initiate_variants = ["Initiated", "initiated"]
     disc_variants = ["Discontinued", "discontinued"]
 
-    # Q1
+    # Q1: unique per peer in Q1
     res["prep_q1"] = np.where(
         any_in_unique_allrows(res, q1_cols, active_prep, case_insensitive=case_insens),
         1,
@@ -61,13 +71,18 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
         1,
         0,
     )
+    res["prep_switched_q1"] = np.where(
+        any_in_unique_allrows(res, q1_cols, switched_variants, case_insensitive=case_insens),
+        1,
+        0,
+    )
     res["prep_disc_q1"] = np.where(
         any_in_unique_allrows(res, q1_cols, disc_variants, case_insensitive=case_insens),
         1,
         0,
     )
 
-    # Q2
+    # Q2: unique per peer in Q2
     res["prep_q2"] = np.where(
         any_in_unique_allrows(res, q2_cols, active_prep, case_insensitive=case_insens),
         1,
@@ -83,11 +98,18 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
         1,
         0,
     )
+    res["prep_switched_q2"] = np.where(
+        any_in_unique_allrows(res, q2_cols, switched_variants, case_insensitive=case_insens),
+        1,
+        0,
+    )
     res["prep_disc_q2"] = np.where(
         any_in_unique_allrows(res, q2_cols, disc_variants, case_insensitive=case_insens),
         1,
         0,
     )
-    res["prep_sem"] = np.where((res["prep_q1"] + res["prep_q2"]) >= 1, 1, 0)
+
+    # SEM: summation of Q1 + Q2
+    res["prep_sem"] = res["prep_q1"] + res["prep_q2"]
 
     return res

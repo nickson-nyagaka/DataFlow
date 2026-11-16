@@ -9,6 +9,7 @@ Implements Master Brief §3, §4, §5, §18:
 
 from __future__ import annotations
 
+import re
 import shutil
 import uuid
 from pathlib import Path
@@ -70,8 +71,10 @@ def init_session_state() -> None:
         "uploaded_file_name": "",
         "uploaded_file_hash": "",
         "uploaded_file_bytes": None,
-        "population": "FSW",
-        "period_mode": "SEM",
+        "population": None,
+        "period_mode": None,
+        "population_explicitly_selected": False,
+        "period_explicitly_selected": False,
         "block_on_critical": False,
         "mask_identifiers": False,
         "pipeline_result": None,
@@ -84,6 +87,7 @@ def init_session_state() -> None:
         "error_details": None,
         "override_manager": None,
         "active_page": "Upload Data",
+        "analytics_context": None,
     }
 
     for key, val in defaults.items():
@@ -121,8 +125,13 @@ def reset_session() -> None:
     st.session_state["uploaded_file_name"] = ""
     st.session_state["uploaded_file_hash"] = ""
     st.session_state["uploaded_file_bytes"] = None
-    st.session_state["population"] = "FSW"
-    st.session_state["period_mode"] = "SEM"
+    st.session_state["population"] = None
+    st.session_state["period_mode"] = None
+    st.session_state["population_explicitly_selected"] = False
+    st.session_state["period_explicitly_selected"] = False
+    for k in ["sel_target_population", "sel_reporting_period", "cohort_file_uploader"]:
+        if k in st.session_state:
+            del st.session_state[k]
     st.session_state["block_on_critical"] = False
     st.session_state["mask_identifiers"] = False
     st.session_state["pipeline_result"] = None
@@ -134,6 +143,7 @@ def reset_session() -> None:
     st.session_state["error_message"] = None
     st.session_state["error_details"] = None
     st.session_state["active_page"] = "Upload Data"
+    st.session_state["analytics_context"] = None
 
     if st.session_state.get("override_manager") is not None:
         st.session_state["override_manager"].clear()
@@ -198,3 +208,21 @@ def render_access_guard(page_name: str) -> bool:
                 st.switch_page(PAGE_SCRIPT_PATHS[earliest])
 
     return False
+
+
+def get_active_pipeline_result() -> Any | None:
+    """Retrieves the active pipeline result for the current session.
+
+    Returns the PipelineResult stored in st.session_state if it matches
+    the uploaded file hash. Never executes synchronous pipelines during page render.
+    """
+    res = st.session_state.get("pipeline_result")
+    curr_hash = st.session_state.get("uploaded_file_hash")
+
+    # If active result matches the uploaded file hash (or no new upload is pending), return it
+    if res is not None:
+        if not curr_hash or getattr(res, "input_file_hash", None) == curr_hash:
+            return res
+
+    return None
+

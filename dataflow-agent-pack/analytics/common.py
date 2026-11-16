@@ -48,7 +48,13 @@ def compute_indicator_aggregate(
 
     If legacy_row_sum is True: computes df[flag_col].sum() (legacy notebook behavior).
     If legacy_row_sum is False: computes unique clients with flag_col == 1 (modern client-grain).
+    For prep_sem: always computes as the summation of Q1 + Q2.
     """
+    if flag_col == "prep_sem" and not legacy_row_sum:
+        q1 = compute_indicator_aggregate(df, "prep_q1", group_cols, id_col, legacy_row_sum=False)
+        q2 = compute_indicator_aggregate(df, "prep_q2", group_cols, id_col, legacy_row_sum=False)
+        return q1 + q2
+
     if legacy_row_sum:
         return df.groupby(group_cols)[flag_col].sum()
     else:

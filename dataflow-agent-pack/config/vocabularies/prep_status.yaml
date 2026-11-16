@@ -4,12 +4,17 @@ canonical_values:
   - "Restart"
   - "Switched"
   - "Refill"
+  - "Continuing"
   - "Discontinued"
 case_variants:
   "initiated": "Initiated"
   "restart": "Restart"
+  "restarted": "Restart"
   "switched": "Switched"
   "refill": "Refill"
+  "refilled": "Refill"
+  "continuing": "Continuing"
+  "continue": "Continuing"
   "discontinued": "Discontinued"
 status: "confirmed"
 
