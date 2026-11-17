@@ -30,11 +30,13 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
             "prep_q1",
             "prep_refill_q1",
             "prep_initiate_q1",
+            "prep_restart_q1",
             "prep_switched_q1",
             "prep_disc_q1",
             "prep_q2",
             "prep_refill_q2",
             "prep_initiate_q2",
+            "prep_restart_q2",
             "prep_switched_q2",
             "prep_disc_q2",
             "prep_sem",
@@ -48,6 +50,9 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
     ]
     refill_variants = [
         "Refill", "refill", "Refilled", "refilled",
+    ]
+    restart_variants = [
+        "Restart", "restart", "Restarted", "restarted",
     ]
     switched_variants = [
         "Switched", "switched", "Switch", "switch",
@@ -68,6 +73,11 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
     )
     res["prep_initiate_q1"] = np.where(
         any_in_unique_allrows(res, q1_cols, initiate_variants, case_insensitive=case_insens),
+        1,
+        0,
+    )
+    res["prep_restart_q1"] = np.where(
+        any_in_unique_allrows(res, q1_cols, restart_variants, case_insensitive=case_insens),
         1,
         0,
     )
@@ -95,6 +105,11 @@ def compute_prep_indicators(df: pd.DataFrame, compat: CompatSwitches | None = No
     )
     res["prep_initiate_q2"] = np.where(
         any_in_unique_allrows(res, q2_cols, initiate_variants, case_insensitive=case_insens),
+        1,
+        0,
+    )
+    res["prep_restart_q2"] = np.where(
+        any_in_unique_allrows(res, q2_cols, restart_variants, case_insensitive=case_insens),
         1,
         0,
     )

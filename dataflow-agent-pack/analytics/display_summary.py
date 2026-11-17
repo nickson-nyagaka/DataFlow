@@ -145,8 +145,16 @@ def extract_prep_cascade(
     reg_df: pd.DataFrame | None = None,
     period_mode: str = "SEM",
 ) -> dict[str, int]:
-    """Extracts PrEP cascade stages: Active, Initiated, Refills, Switched, Discontinued."""
+    """Extracts PrEP cascade stages: Active, Initiated, Refills, Restarted, Switched, Discontinued."""
     pm = period_mode.upper() if period_mode else "SEM"
+
+    if isinstance(reg_df, pd.DataFrame) and not reg_df.empty:
+        if "prep_restart_q1" not in reg_df.columns or "prep_switched_q1" not in reg_df.columns:
+            from analytics.prep import compute_prep_indicators
+            try:
+                reg_df = compute_prep_indicators(reg_df)
+            except Exception:
+                pass
 
     if pm == "Q1":
         prep_active = _sum_first_present(summary_df, "PREP_Q1")
@@ -154,6 +162,7 @@ def extract_prep_cascade(
             prep_active = int((reg_df["prep_q1"] == 1).sum())
         prep_init = _count_flags(reg_df, "prep_initiate_q1")
         prep_refill = _count_flags(reg_df, "prep_refill_q1")
+        prep_restart = _count_flags(reg_df, "prep_restart_q1")
         prep_switched = _count_flags(reg_df, "prep_switched_q1")
         prep_disc = _count_flags(reg_df, "prep_disc_q1")
 
@@ -163,6 +172,7 @@ def extract_prep_cascade(
             prep_active = int((reg_df["prep_q2"] == 1).sum())
         prep_init = _count_flags(reg_df, "prep_initiate_q2")
         prep_refill = _count_flags(reg_df, "prep_refill_q2")
+        prep_restart = _count_flags(reg_df, "prep_restart_q2")
         prep_switched = _count_flags(reg_df, "prep_switched_q2")
         prep_disc = _count_flags(reg_df, "prep_disc_q2")
 
@@ -180,6 +190,7 @@ def extract_prep_cascade(
 
         prep_init = _count_flags(reg_df, "prep_initiate_q1", "prep_initiate_q2")
         prep_refill = _count_flags(reg_df, "prep_refill_q1", "prep_refill_q2")
+        prep_restart = _count_flags(reg_df, "prep_restart_q1", "prep_restart_q2")
         prep_switched = _count_flags(reg_df, "prep_switched_q1", "prep_switched_q2")
         prep_disc = _count_flags(reg_df, "prep_disc_q1", "prep_disc_q2")
 
@@ -187,6 +198,7 @@ def extract_prep_cascade(
         "Active on PrEP": int(prep_active),
         "Initiated (New)": int(prep_init),
         "Refills": int(prep_refill),
+        "Restarted": int(prep_restart),
         "Switched": int(prep_switched),
         "Discontinued": int(prep_disc),
     }
@@ -489,6 +501,7 @@ def compute_display_analytics(
     prep_active = prep_data["Active on PrEP"]
     prep_init = prep_data["Initiated (New)"]
     prep_refill = prep_data["Refills"]
+    prep_restart = prep_data.get("Restarted", 0)
     prep_switched = prep_data["Switched"]
     prep_disc = prep_data["Discontinued"]
 
@@ -825,6 +838,7 @@ def compute_display_analytics(
             "Active on PrEP": prep_active,
             "Initiated (New)": prep_init,
             "Refills": prep_refill,
+            "Restarted": prep_restart,
             "Switched": prep_switched,
             "Discontinued": prep_disc,
         },

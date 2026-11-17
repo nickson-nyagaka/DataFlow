@@ -22,7 +22,7 @@ from ui.session import advance_workflow_stage, render_access_guard
 def render_exports() -> None:
     st.title("📥 Export Reporting Packages")
     st.caption(
-        "Download formatted Global Fund Excel reporting packages and modular audit artifacts."
+        "Download formatted Global Fund Excel reporting packages."
     )
 
     if not render_access_guard("Export Reports"):
@@ -196,10 +196,10 @@ def render_exports() -> None:
 
     # 5. Individual Component Downloads (Always available for DQA / Remediation / Reporting)
     st.subheader("3. Individual Component Downloads")
-    st.caption("Individual workbooks and audit trails for targeted facility review.")
+    st.caption("Individual workbooks for targeted facility review.")
 
     c1, c2 = st.columns(2)
-    c3, c4 = st.columns(2)
+    c3, _ = st.columns(2)
 
     # Summary Report Workbook
     summary_path = result.package_paths.get("summary_workbook")
@@ -288,19 +288,6 @@ def render_exports() -> None:
                 key="btn_dqa_none",
                 use_container_width=True,
             )
-
-    with c4:
-        st.markdown("**Audit & Reconciliation Trail**")
-        audit_file = Path("runtime/audit/override_log.jsonl")
-        audit_content = audit_file.read_bytes() if audit_file.exists() else b"{}"
-        st.download_button(
-            label="Download Audit Log (.jsonl) 📥",
-            data=audit_content,
-            file_name="DATAFLOW_Override_Audit.jsonl",
-            mime="application/x-ndjson",
-            key="btn_audit_always",
-            use_container_width=True,
-        )
 
     # Row for Cleaned Data
     st.markdown("---")

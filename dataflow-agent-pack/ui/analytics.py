@@ -60,7 +60,7 @@ from ui.session import (  # noqa: E402
 # by its KPI cards and its charts, so cards and charts always match.
 _SECTION_ACCENTS: dict[str, list[str]] = {
     "hts_section": ["#3B82F6", "#22C55E", "#EF4444", "#8B5CF6"],
-    "prep_section": ["#06B6D4", "#22C55E", "#3B82F6", "#8B5CF6", "#F97316"],
+    "prep_section": ["#06B6D4", "#22C55E", "#3B82F6", "#14B8A6", "#8B5CF6", "#F97316"],
     "art_section": ["#6366F1", "#3B82F6", "#14B8A6", "#22C55E"],
     "clin_section": ["#F59E0B", "#EF4444", "#22C55E", "#8B5CF6"],
     "comm_section": ["#0EA5E9", "#EC4899", "#F59E0B", "#10B981", "#8B5CF6", "#EF4444"],
@@ -220,7 +220,7 @@ def _style_bar_figure(fig: go.Figure, colors: list[str], height: int = 440, barg
         hovertemplate="<b>%{x}</b><br>%{y:,}<extra></extra>",
     )
     fig.update_layout(bargap=bargap, showlegend=False)
-    fig.update_yaxes(rangemode="tozero", tickformat=",")
+    fig.update_yaxes(rangemode="tozero", tickformat="d")
     return _polish_figure(fig, height=height)
 
 
@@ -598,29 +598,39 @@ def render_analytics() -> None:
 
         with _section_container("prep_section"):
             st.subheader(f"2. Pre-Exposure Prophylaxis (PrEP) Cascade — {population}{filter_label}")
-            st.caption("Active client status, new initiations, refills, regimen switches, and discontinuations.")
+            st.caption("Active client status, new initiations, refills, restarts, regimen switches, and discontinuations.")
             st.markdown(_badges_html(population, period_mode, filter_tags), unsafe_allow_html=True)
-            if is_filtered:
+            prep_data = disp.get("prep_cascade", {})
+            if is_filtered or not prep_data or "Restarted" not in prep_data:
                 prep_data = extract_prep_cascade(filtered_summary, filtered_reg, period_mode)
-            else:
-                prep_data = disp.get("prep_cascade", {})
 
-            p1, p2, p3, p4, p5 = st.columns(5)
+            p1, p2, p3, p4, p5, p6 = st.columns(6)
             p_act = prep_data.get("Active on PrEP", prep_data.get("Screened", 0))
             p_init = prep_data.get("Initiated (New)", prep_data.get("Initiated", 0))
             p_ref = prep_data.get("Refills", prep_data.get("Refills / Continuing", 0))
+            p_restart = prep_data.get("Restarted", prep_data.get("Restart", 0))
             p_switch = prep_data.get("Switched", 0)
             p_disc = prep_data.get("Discontinued", 0)
 
             p1.metric("Active on PrEP", f"{p_act:,}")
             p2.metric("Initiated (New)", f"{p_init:,}")
             p3.metric("Refills", f"{p_ref:,}")
-            p4.metric("Switched", f"{p_switch:,}")
-            p5.metric("Discontinued", f"{p_disc:,}")
+            p4.metric("Restarted", f"{p_restart:,}")
+            p5.metric("Switched", f"{p_switch:,}")
+            p6.metric("Discontinued", f"{p_disc:,}")
 
-            if prep_data and any(v > 0 for v in prep_data.values()):
-                prep_labels = list(prep_data.keys())
-                prep_vals = list(prep_data.values())
+            prep_display_dict = {
+                "Active on PrEP": p_act,
+                "Initiated (New)": p_init,
+                "Refills": p_ref,
+                "Restarted": p_restart,
+                "Switched": p_switch,
+                "Discontinued": p_disc,
+            }
+
+            if prep_display_dict and any(v > 0 for v in prep_display_dict.values()):
+                prep_labels = list(prep_display_dict.keys())
+                prep_vals = list(prep_display_dict.values())
                 fig_prep = create_grouped_bar(
                     categories=prep_labels,
                     series_dict={"PrEP Clients": prep_vals},
@@ -634,10 +644,11 @@ def render_analytics() -> None:
                         "- **Active on PrEP** represents unique clients who initiated, refilled, restarted, or switched (sum of Q1 + Q2 for semester, excluding continuing).\n"
                         "- **Initiated (New)** counts clients who started PrEP in the period.\n"
                         "- **Refills** counts clients receiving PrEP drug refills.\n"
+                        "- **Restarted** counts clients who restarted PrEP after an interruption or gap in prevention.\n"
                         "- **Switched** counts clients transitioned across PrEP regimens/products.\n"
                         "- **Discontinued** counts clients who stopped PrEP — a rising bar here warrants retention follow-up."
                     )
-                _data_table_expander(prep_data)
+                _data_table_expander(prep_display_dict)
             else:
                 st.info(f"No PrEP programmatic records found for selected filter{filter_label}.")
 

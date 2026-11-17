@@ -1,463 +1,772 @@
 {
-  "timestamp": "2026-11-16T13:38:55.088669+00:00",
-  "input_file_name": "VP Cohort Register-Jul-Sept 2026.xlsb",
-  "input_file_hash": "89f4fc5b394f2cb154b9045c265ac254b7194cd2b4813762c81ae3d475ef0b43",
-  "config_hash": "d33e494ca2496419",
-  "population": "VP",
+  "timestamp": "2026-11-17T09:50:02.431907+00:00",
+  "input_file_name": "FSW Register_Summaries.xlsb",
+  "input_file_hash": "15547683faf0d048994758bcc07e169d31e0dd0dfb2a07405a363a582bb44ff2",
+  "config_hash": "8c56f4b49d1c3420",
+  "population": "FSW",
   "period_mode": "Q1",
-  "total_cohort": 38426,
-  "active_kplhiv": 1420,
-  "total_dqa_exceptions": 536,
-  "critical_dqa_count": 15,
-  "major_dqa_count": 521,
+  "total_cohort": 88866,
+  "active_kplhiv": 2748,
+  "total_dqa_exceptions": 296,
+  "critical_dqa_count": 4,
+  "major_dqa_count": 292,
   "minor_dqa_count": 0,
-  "duration_seconds": 95.819,
+  "duration_seconds": 239.452,
   "stage_timings": {
-    "ingestion": 18.853,
-    "cleaning": 6.361,
-    "dqa": 1.652,
-    "analytics": 6.26,
-    "reporting": 62.566
+    "ingestion": 45.233,
+    "cleaning": 16.994,
+    "dqa": 1.748,
+    "analytics": 14.468,
+    "reporting": 160.886
   },
   "display_analytics": {
     "executive_metrics": {
-      "total_cohort": 38426,
-      "defined_package": 26547,
-      "defined_package_rate": 69.1,
-      "hts_tested": 26158,
-      "testing_rate": 68.1,
-      "hts_positive": 26,
-      "hts_positivity_rate": 0.1,
-      "prep_active": 3018,
-      "active_kplhiv": 1420,
-      "current_on_art": 1307,
-      "viral_load_done": 1420,
-      "virally_suppressed": 1287,
-      "suppression_rate": 90.6,
-      "sti_treatment_rate": 98.4
+      "total_cohort": 88866,
+      "defined_package": 88045,
+      "defined_package_rate": 99.1,
+      "hts_tested": 85451,
+      "testing_rate": 96.2,
+      "hts_positive": 11,
+      "hts_positivity_rate": 0.01,
+      "prep_active": 26338,
+      "active_kplhiv": 2667,
+      "current_on_art": 2656,
+      "viral_load_done": 2748,
+      "virally_suppressed": 2488,
+      "suppression_rate": 90.5,
+      "sti_treatment_rate": 100.0
     },
     "hts_cascade": {
-      "Tested": 26158,
-      "Negative": 26132,
-      "Positive": 26,
-      "Linked to ART": 26
+      "Tested": 85451,
+      "Negative": 85440,
+      "Positive": 11,
+      "Linked to ART": 11
     },
     "prep_cascade": {
-      "Active on PrEP": 3018,
-      "Initiated (New)": 1992,
-      "Refills / Continuing": 970,
-      "Discontinued": 15
+      "Active on PrEP": 26338,
+      "Initiated (New)": 388,
+      "Refills": 20911,
+      "Restarted": 9950,
+      "Switched": 201,
+      "Discontinued": 7178
     },
     "art_cascade": {
-      "Active KPLHIV": 1420,
-      "On ART": 1307,
-      "Viral Load Done": 1420,
-      "Suppressed (<1000 cp/ml)": 1287
+      "Active KPLHIV": 2667,
+      "On ART": 2656,
+      "Viral Load Done": 2748,
+      "Suppressed (<1000 cp/ml)": 2488
     },
     "clinical_cascade": {
-      "STI Screened": 26867,
-      "STI Diagnosed": 255,
-      "STI Treated": 251,
-      "TB Screened": 26864
+      "STI Screened": 88394,
+      "STI Diagnosed": 295,
+      "STI Treated": 295,
+      "TB Screened": 88394
     },
     "commodities": {
-      "Male Condoms": 754918,
-      "Clients Receiving Condoms": 37828,
-      "Lubricants Distributed": 5307,
-      "Peer Education Reached": 38335
+      "Male Condoms": 1610658,
+      "Clients Receiving Condoms": 88856,
+      "Lubricants Distributed": 52059,
+      "Peer Education Reached": 88857
     },
     "demographics": {
-      "Below 15": 0,
-      "15\u201319": 1163,
-      "20\u201324": 4148,
-      "25+": 33115
+      "Below 15": 1,
+      "15\u201319": 129,
+      "20\u201324": 11032,
+      "25+": 77704
     },
     "geography_summary": [
       {
-        "County": "BUSIA",
-        "SR Name": "MILDMAY KENYA",
-        "Region": "WKR",
-        "Cohort": 2052,
-        "Defined Package": 668,
-        "HTS Tested": 830,
-        "PrEP Active": 106,
-        "Active KPLHIV": 77,
-        "Suppressed": 64
-      },
-      {
-        "County": "HOMA BAY",
-        "SR Name": "ADS NYANZA",
-        "Region": "WKR",
-        "Cohort": 6194,
-        "Defined Package": 3060,
-        "HTS Tested": 2825,
-        "PrEP Active": 572,
-        "Active KPLHIV": 566,
-        "Suppressed": 512
-      },
-      {
-        "County": "KISUMU",
-        "SR Name": "CMMB",
-        "Region": "WKR",
-        "Cohort": 3916,
-        "Defined Package": 1530,
-        "HTS Tested": 1457,
-        "PrEP Active": 187,
-        "Active KPLHIV": 187,
-        "Suppressed": 184
-      },
-      {
-        "County": "MACHAKOS",
-        "SR Name": "NSA",
-        "Region": "LER",
-        "Cohort": 684,
-        "Defined Package": 684,
-        "HTS Tested": 679,
-        "PrEP Active": 57,
-        "Active KPLHIV": 5,
-        "Suppressed": 1
-      },
-      {
-        "County": "MAKUENI",
-        "SR Name": "NSA",
-        "Region": "LER",
-        "Cohort": 4106,
-        "Defined Package": 4107,
-        "HTS Tested": 4099,
-        "PrEP Active": 370,
-        "Active KPLHIV": 11,
-        "Suppressed": 7
-      },
-      {
-        "County": "MIGORI",
-        "SR Name": "CMMB",
-        "Region": "WKR",
-        "Cohort": 3589,
-        "Defined Package": 1363,
-        "HTS Tested": 1332,
-        "PrEP Active": 222,
-        "Active KPLHIV": 179,
-        "Suppressed": 171
-      },
-      {
-        "County": "MOMBASA",
-        "SR Name": "ADS PWANI",
-        "Region": "COR",
-        "Cohort": 759,
-        "Defined Package": 746,
-        "HTS Tested": 736,
-        "PrEP Active": 68,
-        "Active KPLHIV": 10,
-        "Suppressed": 9
-      },
-      {
-        "County": "MOMBASA",
-        "SR Name": "NSA",
-        "Region": "COR",
-        "Cohort": 3221,
-        "Defined Package": 3221,
-        "HTS Tested": 3186,
-        "PrEP Active": 385,
-        "Active KPLHIV": 39,
+        "County": "BARINGO",
+        "SR Name": "NIAK",
+        "Region": "NRR",
+        "Cohort": 1958,
+        "Defined Package": 1958,
+        "HTS Tested": 1937,
+        "PrEP Active": 608,
+        "Active KPLHIV": 21,
         "Suppressed": 20
       },
       {
-        "County": "NAKURU",
-        "SR Name": "NSA",
+        "County": "ELGEYO MARAKWET",
+        "SR Name": "NIAK",
         "Region": "NRR",
-        "Cohort": 6025,
-        "Defined Package": 6025,
-        "HTS Tested": 5986,
-        "PrEP Active": 595,
-        "Active KPLHIV": 45,
-        "Suppressed": 30
-      },
-      {
-        "County": "SIAYA",
-        "SR Name": "MILDMAY KENYA",
-        "Region": "WKR",
-        "Cohort": 4130,
-        "Defined Package": 1751,
-        "HTS Tested": 1640,
-        "PrEP Active": 146,
-        "Active KPLHIV": 269,
-        "Suppressed": 261
-      },
-      {
-        "County": "TURKANA",
-        "SR Name": "AICHM",
-        "Region": "NRR",
-        "Cohort": 575,
-        "Defined Package": 225,
-        "HTS Tested": 228,
-        "PrEP Active": 35,
+        "Cohort": 1325,
+        "Defined Package": 1325,
+        "HTS Tested": 1301,
+        "PrEP Active": 239,
         "Active KPLHIV": 24,
         "Suppressed": 24
       },
       {
-        "County": "UASIN GISHU",
-        "SR Name": "NSA",
+        "County": "ISIOLO",
+        "SR Name": "BHESP",
+        "Region": "NER",
+        "Cohort": 707,
+        "Defined Package": 707,
+        "HTS Tested": 707,
+        "PrEP Active": 682,
+        "Active KPLHIV": 0,
+        "Suppressed": 0
+      },
+      {
+        "County": "KAJIADO",
+        "SR Name": "HOYMAS",
+        "Region": "LER",
+        "Cohort": 4222,
+        "Defined Package": 4203,
+        "HTS Tested": 4119,
+        "PrEP Active": 597,
+        "Active KPLHIV": 98,
+        "Suppressed": 89
+      },
+      {
+        "County": "KAJIADO",
+        "SR Name": "HWWK",
+        "Region": "LER",
+        "Cohort": 4165,
+        "Defined Package": 4159,
+        "HTS Tested": 4063,
+        "PrEP Active": 928,
+        "Active KPLHIV": 97,
+        "Suppressed": 59
+      },
+      {
+        "County": "KERICHO",
+        "SR Name": "NOPE",
+        "Region": "WKR",
+        "Cohort": 2772,
+        "Defined Package": 2717,
+        "HTS Tested": 2517,
+        "PrEP Active": 448,
+        "Active KPLHIV": 200,
+        "Suppressed": 199
+      },
+      {
+        "County": "KILIFI",
+        "SR Name": "TOP PUP",
+        "Region": "COR",
+        "Cohort": 1675,
+        "Defined Package": 1664,
+        "HTS Tested": 1574,
+        "PrEP Active": 615,
+        "Active KPLHIV": 94,
+        "Suppressed": 83
+      },
+      {
+        "County": "KISII",
+        "SR Name": "IRDO",
+        "Region": "WKR",
+        "Cohort": 4558,
+        "Defined Package": 4549,
+        "HTS Tested": 4481,
+        "PrEP Active": 644,
+        "Active KPLHIV": 67,
+        "Suppressed": 67
+      },
+      {
+        "County": "KWALE",
+        "SR Name": "TOP PUP",
+        "Region": "COR",
+        "Cohort": 745,
+        "Defined Package": 744,
+        "HTS Tested": 703,
+        "PrEP Active": 320,
+        "Active KPLHIV": 41,
+        "Suppressed": 38
+      },
+      {
+        "County": "KWALE",
+        "SR Name": "TWC KWALE",
+        "Region": "COR",
+        "Cohort": 3010,
+        "Defined Package": 2580,
+        "HTS Tested": 2492,
+        "PrEP Active": 406,
+        "Active KPLHIV": 111,
+        "Suppressed": 83
+      },
+      {
+        "County": "LAIKIPIA",
+        "SR Name": "BHESP",
+        "Region": "LER",
+        "Cohort": 1228,
+        "Defined Package": 1228,
+        "HTS Tested": 1157,
+        "PrEP Active": 1150,
+        "Active KPLHIV": 71,
+        "Suppressed": 71
+      },
+      {
+        "County": "MARSABIT",
+        "SR Name": "BHESP",
+        "Region": "NER",
+        "Cohort": 1611,
+        "Defined Package": 1611,
+        "HTS Tested": 1583,
+        "PrEP Active": 1145,
+        "Active KPLHIV": 28,
+        "Suppressed": 28
+      },
+      {
+        "County": "NAIROBI",
+        "SR Name": "BHESP",
+        "Region": "LER",
+        "Cohort": 21704,
+        "Defined Package": 21701,
+        "HTS Tested": 21228,
+        "PrEP Active": 7311,
+        "Active KPLHIV": 477,
+        "Suppressed": 473
+      },
+      {
+        "County": "NAKURU",
+        "SR Name": "HWWK",
         "Region": "NRR",
-        "Cohort": 3167,
-        "Defined Package": 3167,
-        "HTS Tested": 3160,
-        "PrEP Active": 275,
-        "Active KPLHIV": 8,
-        "Suppressed": 4
+        "Cohort": 8049,
+        "Defined Package": 8042,
+        "HTS Tested": 7689,
+        "PrEP Active": 2230,
+        "Active KPLHIV": 356,
+        "Suppressed": 352
+      },
+      {
+        "County": "NANDI",
+        "SR Name": "IRDO",
+        "Region": "NRR",
+        "Cohort": 3261,
+        "Defined Package": 3243,
+        "HTS Tested": 3187,
+        "PrEP Active": 495,
+        "Active KPLHIV": 56,
+        "Suppressed": 56
+      },
+      {
+        "County": "NYAMIRA",
+        "SR Name": "IRDO",
+        "Region": "WKR",
+        "Cohort": 1993,
+        "Defined Package": 1879,
+        "HTS Tested": 1826,
+        "PrEP Active": 198,
+        "Active KPLHIV": 54,
+        "Suppressed": 54
+      },
+      {
+        "County": "NYANDARUA",
+        "SR Name": "BHESP",
+        "Region": "LER",
+        "Cohort": 1806,
+        "Defined Package": 1806,
+        "HTS Tested": 1745,
+        "PrEP Active": 1666,
+        "Active KPLHIV": 61,
+        "Suppressed": 61
+      },
+      {
+        "County": "NYERI",
+        "SR Name": "HOYMAS",
+        "Region": "LER",
+        "Cohort": 3129,
+        "Defined Package": 3123,
+        "HTS Tested": 2987,
+        "PrEP Active": 937,
+        "Active KPLHIV": 142,
+        "Suppressed": 138
+      },
+      {
+        "County": "SAMBURU",
+        "SR Name": "HWWK",
+        "Region": "NER",
+        "Cohort": 809,
+        "Defined Package": 799,
+        "HTS Tested": 710,
+        "PrEP Active": 91,
+        "Active KPLHIV": 91,
+        "Suppressed": 72
+      },
+      {
+        "County": "TAITA TAVETA",
+        "SR Name": "RCT",
+        "Region": "COR",
+        "Cohort": 2972,
+        "Defined Package": 2971,
+        "HTS Tested": 2900,
+        "PrEP Active": 936,
+        "Active KPLHIV": 73,
+        "Suppressed": 58
+      },
+      {
+        "County": "TANA RIVER",
+        "SR Name": "TWC",
+        "Region": "COR",
+        "Cohort": 1913,
+        "Defined Package": 1911,
+        "HTS Tested": 1846,
+        "PrEP Active": 421,
+        "Active KPLHIV": 65,
+        "Suppressed": 47
+      },
+      {
+        "County": "TRANSNZOIA",
+        "SR Name": "NIAK",
+        "Region": "NRR",
+        "Cohort": 3137,
+        "Defined Package": 3067,
+        "HTS Tested": 3021,
+        "PrEP Active": 367,
+        "Active KPLHIV": 51,
+        "Suppressed": 47
+      },
+      {
+        "County": "UASIN GISHU",
+        "SR Name": "NIAK",
+        "Region": "NRR",
+        "Cohort": 4360,
+        "Defined Package": 4337,
+        "HTS Tested": 4108,
+        "PrEP Active": 780,
+        "Active KPLHIV": 229,
+        "Suppressed": 218
+      },
+      {
+        "County": "VIHIGA",
+        "SR Name": "IRDO",
+        "Region": "WKR",
+        "Cohort": 1946,
+        "Defined Package": 1913,
+        "HTS Tested": 1867,
+        "PrEP Active": 389,
+        "Active KPLHIV": 54,
+        "Suppressed": 54
+      },
+      {
+        "County": "WAJIR",
+        "SR Name": "BHESP",
+        "Region": "NER",
+        "Cohort": 3495,
+        "Defined Package": 3495,
+        "HTS Tested": 3488,
+        "PrEP Active": 2010,
+        "Active KPLHIV": 7,
+        "Suppressed": 7
+      },
+      {
+        "County": "WEST POKOT",
+        "SR Name": "NEPHAK",
+        "Region": "NRR",
+        "Cohort": 2315,
+        "Defined Package": 2313,
+        "HTS Tested": 2215,
+        "PrEP Active": 725,
+        "Active KPLHIV": 99,
+        "Suppressed": 90
       }
     ],
     "geography_breakdown": [
       {
-        "County": "BUSIA",
-        "SR Name": "MILDMAY KENYA",
-        "Region": "WKR"
-      },
-      {
-        "County": "HOMA BAY",
-        "SR Name": "ADS NYANZA",
-        "Region": "WKR"
-      },
-      {
-        "County": "KISUMU",
-        "SR Name": "CMMB",
-        "Region": "WKR"
-      },
-      {
-        "County": "MACHAKOS",
-        "SR Name": "NSA",
-        "Region": "LER"
-      },
-      {
-        "County": "MAKUENI",
-        "SR Name": "NSA",
-        "Region": "LER"
-      },
-      {
-        "County": "MIGORI",
-        "SR Name": "CMMB",
-        "Region": "WKR"
-      },
-      {
-        "County": "MOMBASA",
-        "SR Name": "ADS PWANI",
-        "Region": "COR"
-      },
-      {
-        "County": "MOMBASA",
-        "SR Name": "NSA",
-        "Region": "COR"
-      },
-      {
-        "County": "NAKURU",
-        "SR Name": "NSA",
+        "County": "BARINGO",
+        "SR Name": "NIAK",
         "Region": "NRR"
       },
       {
-        "County": "SIAYA",
-        "SR Name": "MILDMAY KENYA",
+        "County": "ELGEYO MARAKWET",
+        "SR Name": "NIAK",
+        "Region": "NRR"
+      },
+      {
+        "County": "ISIOLO",
+        "SR Name": "BHESP",
+        "Region": "NER"
+      },
+      {
+        "County": "KAJIADO",
+        "SR Name": "HOYMAS",
+        "Region": "LER"
+      },
+      {
+        "County": "KAJIADO",
+        "SR Name": "HWWK",
+        "Region": "LER"
+      },
+      {
+        "County": "KERICHO",
+        "SR Name": "NOPE",
         "Region": "WKR"
       },
       {
-        "County": "TURKANA",
-        "SR Name": "AICHM",
+        "County": "KILIFI",
+        "SR Name": "TOP PUP",
+        "Region": "COR"
+      },
+      {
+        "County": "KISII",
+        "SR Name": "IRDO",
+        "Region": "WKR"
+      },
+      {
+        "County": "KWALE",
+        "SR Name": "TOP PUP",
+        "Region": "COR"
+      },
+      {
+        "County": "KWALE",
+        "SR Name": "TWC KWALE",
+        "Region": "COR"
+      },
+      {
+        "County": "LAIKIPIA",
+        "SR Name": "BHESP",
+        "Region": "LER"
+      },
+      {
+        "County": "MARSABIT",
+        "SR Name": "BHESP",
+        "Region": "NER"
+      },
+      {
+        "County": "NAIROBI",
+        "SR Name": "BHESP",
+        "Region": "LER"
+      },
+      {
+        "County": "NAKURU",
+        "SR Name": "HWWK",
+        "Region": "NRR"
+      },
+      {
+        "County": "NANDI",
+        "SR Name": "IRDO",
+        "Region": "NRR"
+      },
+      {
+        "County": "NYAMIRA",
+        "SR Name": "IRDO",
+        "Region": "WKR"
+      },
+      {
+        "County": "NYANDARUA",
+        "SR Name": "BHESP",
+        "Region": "LER"
+      },
+      {
+        "County": "NYERI",
+        "SR Name": "HOYMAS",
+        "Region": "LER"
+      },
+      {
+        "County": "SAMBURU",
+        "SR Name": "HWWK",
+        "Region": "NER"
+      },
+      {
+        "County": "TAITA TAVETA",
+        "SR Name": "RCT",
+        "Region": "COR"
+      },
+      {
+        "County": "TANA RIVER",
+        "SR Name": "TWC",
+        "Region": "COR"
+      },
+      {
+        "County": "TRANSNZOIA",
+        "SR Name": "NIAK",
         "Region": "NRR"
       },
       {
         "County": "UASIN GISHU",
-        "SR Name": "NSA",
+        "SR Name": "NIAK",
+        "Region": "NRR"
+      },
+      {
+        "County": "VIHIGA",
+        "SR Name": "IRDO",
+        "Region": "WKR"
+      },
+      {
+        "County": "WAJIR",
+        "SR Name": "BHESP",
+        "Region": "NER"
+      },
+      {
+        "County": "WEST POKOT",
+        "SR Name": "NEPHAK",
         "Region": "NRR"
       }
     ],
     "performance_scorecard": [
       {
         "indicator": "Defined Package Coverage",
-        "actual": 69.1,
+        "actual": 99.1,
         "target": 80.0,
-        "numerator": 26547,
-        "denominator": 38426,
+        "numerator": 88045,
+        "denominator": 88866,
         "unit": "%",
-        "status": "Below Target",
-        "gap": 10.9
+        "status": "On Track",
+        "gap": 0.0
       },
       {
         "indicator": "HIV Testing Coverage",
-        "actual": 68.1,
+        "actual": 96.2,
         "target": 90.0,
-        "numerator": 26158,
-        "denominator": 38426,
+        "numerator": 85451,
+        "denominator": 88866,
         "unit": "%",
-        "status": "Below Target",
-        "gap": 21.9
+        "status": "On Track",
+        "gap": 0.0
       },
       {
         "indicator": "Treatment Linkage (1st 95)",
         "actual": 100.0,
         "target": 95.0,
-        "numerator": 26,
-        "denominator": 26,
+        "numerator": 11,
+        "denominator": 11,
         "unit": "%",
         "status": "On Track",
         "gap": 0.0
       },
       {
         "indicator": "Viral Load Coverage (2nd 95)",
-        "actual": 100.0,
+        "actual": 103.0,
         "target": 95.0,
-        "numerator": 1420,
-        "denominator": 1420,
+        "numerator": 2748,
+        "denominator": 2667,
         "unit": "%",
         "status": "On Track",
         "gap": 0.0
       },
       {
         "indicator": "Viral Suppression (3rd 95)",
-        "actual": 90.6,
+        "actual": 90.5,
         "target": 95.0,
-        "numerator": 1287,
-        "denominator": 1420,
+        "numerator": 2488,
+        "denominator": 2748,
         "unit": "%",
         "status": "Needs Attention",
-        "gap": 4.4
+        "gap": 4.5
       }
     ],
     "regional_performance": [
       {
         "region": "COR",
-        "cohort": 3980,
-        "tested": 3922,
-        "defined_package": 3967,
-        "prep_active": 453,
-        "active_kplhiv": 49,
-        "suppressed": 29,
-        "testing_rate": 98.5,
-        "dp_rate": 99.7,
-        "prep_rate": 11.4,
-        "suppression_rate": 59.2
+        "cohort": 10315,
+        "tested": 9515,
+        "defined_package": 9870,
+        "prep_active": 2698,
+        "active_kplhiv": 384,
+        "suppressed": 309,
+        "testing_rate": 92.2,
+        "dp_rate": 95.7,
+        "prep_rate": 26.2,
+        "suppression_rate": 80.5
       },
       {
         "region": "LER",
-        "cohort": 4790,
-        "tested": 4778,
-        "defined_package": 4791,
-        "prep_active": 427,
-        "active_kplhiv": 16,
-        "suppressed": 8,
-        "testing_rate": 99.7,
-        "dp_rate": 100.0,
-        "prep_rate": 8.9,
-        "suppression_rate": 50.0
+        "cohort": 36254,
+        "tested": 35299,
+        "defined_package": 36220,
+        "prep_active": 12589,
+        "active_kplhiv": 946,
+        "suppressed": 891,
+        "testing_rate": 97.4,
+        "dp_rate": 99.9,
+        "prep_rate": 34.7,
+        "suppression_rate": 94.2
+      },
+      {
+        "region": "NER",
+        "cohort": 6622,
+        "tested": 6488,
+        "defined_package": 6612,
+        "prep_active": 3928,
+        "active_kplhiv": 126,
+        "suppressed": 107,
+        "testing_rate": 98.0,
+        "dp_rate": 99.8,
+        "prep_rate": 59.3,
+        "suppression_rate": 84.9
       },
       {
         "region": "NRR",
-        "cohort": 9767,
-        "tested": 9374,
-        "defined_package": 9417,
-        "prep_active": 905,
-        "active_kplhiv": 77,
-        "suppressed": 58,
-        "testing_rate": 96.0,
-        "dp_rate": 96.4,
-        "prep_rate": 9.3,
-        "suppression_rate": 75.3
+        "cohort": 24405,
+        "tested": 23458,
+        "defined_package": 24285,
+        "prep_active": 5444,
+        "active_kplhiv": 836,
+        "suppressed": 807,
+        "testing_rate": 96.1,
+        "dp_rate": 99.5,
+        "prep_rate": 22.3,
+        "suppression_rate": 96.5
       },
       {
         "region": "WKR",
-        "cohort": 19881,
-        "tested": 8084,
-        "defined_package": 8372,
-        "prep_active": 1233,
-        "active_kplhiv": 1278,
-        "suppressed": 1192,
-        "testing_rate": 40.7,
-        "dp_rate": 42.1,
-        "prep_rate": 6.2,
-        "suppression_rate": 93.3
+        "cohort": 11269,
+        "tested": 10691,
+        "defined_package": 11058,
+        "prep_active": 1679,
+        "active_kplhiv": 375,
+        "suppressed": 374,
+        "testing_rate": 94.9,
+        "dp_rate": 98.1,
+        "prep_rate": 14.9,
+        "suppression_rate": 99.7
       }
     ],
     "sr_rankings": [
       {
-        "sr_name": "NSA",
-        "region": "LER",
-        "cohort": 17203,
-        "tested": 17110,
-        "defined_package": 17204,
-        "prep_active": 1682,
-        "active_kplhiv": 108,
-        "suppressed": 62,
-        "testing_rate": 99.5,
+        "sr_name": "BHESP",
+        "region": "NER",
+        "cohort": 30551,
+        "tested": 29908,
+        "defined_package": 30548,
+        "prep_active": 13964,
+        "active_kplhiv": 644,
+        "suppressed": 640,
+        "testing_rate": 97.9,
         "dp_rate": 100.0,
-        "prep_rate": 9.8,
-        "suppression_rate": 57.4
+        "prep_rate": 45.7,
+        "suppression_rate": 99.4
       },
       {
-        "sr_name": "CMMB",
+        "sr_name": "HWWK",
+        "region": "LER",
+        "cohort": 13023,
+        "tested": 12462,
+        "defined_package": 13000,
+        "prep_active": 3249,
+        "active_kplhiv": 544,
+        "suppressed": 483,
+        "testing_rate": 95.7,
+        "dp_rate": 99.8,
+        "prep_rate": 24.9,
+        "suppression_rate": 88.8
+      },
+      {
+        "sr_name": "IRDO",
         "region": "WKR",
-        "cohort": 7505,
-        "tested": 2789,
-        "defined_package": 2893,
-        "prep_active": 409,
-        "active_kplhiv": 366,
-        "suppressed": 355,
-        "testing_rate": 37.2,
-        "dp_rate": 38.5,
-        "prep_rate": 5.4,
-        "suppression_rate": 97.0
-      },
-      {
-        "sr_name": "ADS NYANZA",
-        "region": "WKR",
-        "cohort": 6194,
-        "tested": 2825,
-        "defined_package": 3060,
-        "prep_active": 572,
-        "active_kplhiv": 566,
-        "suppressed": 512,
-        "testing_rate": 45.6,
-        "dp_rate": 49.4,
-        "prep_rate": 9.2,
-        "suppression_rate": 90.5
-      },
-      {
-        "sr_name": "MILDMAY KENYA",
-        "region": "WKR",
-        "cohort": 6182,
-        "tested": 2470,
-        "defined_package": 2419,
-        "prep_active": 252,
-        "active_kplhiv": 346,
-        "suppressed": 325,
-        "testing_rate": 40.0,
-        "dp_rate": 39.1,
-        "prep_rate": 4.1,
-        "suppression_rate": 93.9
-      },
-      {
-        "sr_name": "ADS PWANI",
-        "region": "COR",
-        "cohort": 759,
-        "tested": 736,
-        "defined_package": 746,
-        "prep_active": 68,
-        "active_kplhiv": 10,
-        "suppressed": 9,
-        "testing_rate": 97.0,
-        "dp_rate": 98.3,
-        "prep_rate": 9.0,
-        "suppression_rate": 90.0
-      },
-      {
-        "sr_name": "AICHM",
-        "region": "NRR",
-        "cohort": 575,
-        "tested": 228,
-        "defined_package": 225,
-        "prep_active": 35,
-        "active_kplhiv": 24,
-        "suppressed": 24,
-        "testing_rate": 39.7,
-        "dp_rate": 39.1,
-        "prep_rate": 6.1,
+        "cohort": 11758,
+        "tested": 11361,
+        "defined_package": 11584,
+        "prep_active": 1726,
+        "active_kplhiv": 231,
+        "suppressed": 231,
+        "testing_rate": 96.6,
+        "dp_rate": 98.5,
+        "prep_rate": 14.7,
         "suppression_rate": 100.0
+      },
+      {
+        "sr_name": "NIAK",
+        "region": "NRR",
+        "cohort": 10780,
+        "tested": 10367,
+        "defined_package": 10687,
+        "prep_active": 1994,
+        "active_kplhiv": 325,
+        "suppressed": 309,
+        "testing_rate": 96.2,
+        "dp_rate": 99.1,
+        "prep_rate": 18.5,
+        "suppression_rate": 95.1
+      },
+      {
+        "sr_name": "HOYMAS",
+        "region": "LER",
+        "cohort": 7351,
+        "tested": 7106,
+        "defined_package": 7326,
+        "prep_active": 1534,
+        "active_kplhiv": 240,
+        "suppressed": 227,
+        "testing_rate": 96.7,
+        "dp_rate": 99.7,
+        "prep_rate": 20.9,
+        "suppression_rate": 94.6
+      },
+      {
+        "sr_name": "TWC KWALE",
+        "region": "COR",
+        "cohort": 3010,
+        "tested": 2492,
+        "defined_package": 2580,
+        "prep_active": 406,
+        "active_kplhiv": 111,
+        "suppressed": 83,
+        "testing_rate": 82.8,
+        "dp_rate": 85.7,
+        "prep_rate": 13.5,
+        "suppression_rate": 74.8
+      },
+      {
+        "sr_name": "RCT",
+        "region": "COR",
+        "cohort": 2972,
+        "tested": 2900,
+        "defined_package": 2971,
+        "prep_active": 936,
+        "active_kplhiv": 73,
+        "suppressed": 58,
+        "testing_rate": 97.6,
+        "dp_rate": 100.0,
+        "prep_rate": 31.5,
+        "suppression_rate": 79.5
+      },
+      {
+        "sr_name": "NOPE",
+        "region": "WKR",
+        "cohort": 2772,
+        "tested": 2517,
+        "defined_package": 2717,
+        "prep_active": 448,
+        "active_kplhiv": 200,
+        "suppressed": 199,
+        "testing_rate": 90.8,
+        "dp_rate": 98.0,
+        "prep_rate": 16.2,
+        "suppression_rate": 99.5
+      },
+      {
+        "sr_name": "TOP PUP",
+        "region": "COR",
+        "cohort": 2420,
+        "tested": 2277,
+        "defined_package": 2408,
+        "prep_active": 935,
+        "active_kplhiv": 135,
+        "suppressed": 121,
+        "testing_rate": 94.1,
+        "dp_rate": 99.5,
+        "prep_rate": 38.6,
+        "suppression_rate": 89.6
+      },
+      {
+        "sr_name": "NEPHAK",
+        "region": "NRR",
+        "cohort": 2315,
+        "tested": 2215,
+        "defined_package": 2313,
+        "prep_active": 725,
+        "active_kplhiv": 99,
+        "suppressed": 90,
+        "testing_rate": 95.7,
+        "dp_rate": 99.9,
+        "prep_rate": 31.3,
+        "suppression_rate": 90.9
+      },
+      {
+        "sr_name": "TWC",
+        "region": "COR",
+        "cohort": 1913,
+        "tested": 1846,
+        "defined_package": 1911,
+        "prep_active": 421,
+        "active_kplhiv": 65,
+        "suppressed": 47,
+        "testing_rate": 96.5,
+        "dp_rate": 99.9,
+        "prep_rate": 22.0,
+        "suppression_rate": 72.3
       }
     ],
     "management_alerts": [
@@ -465,15 +774,8 @@
         "category": "Data Quality",
         "severity": "Critical",
         "title": "Critical DQA Exceptions Detected",
-        "message": "15 Critical DQA exception(s) require Sub-Recipient follow-up and reconciliation before external submission.",
-        "trace_metric": "15 Critical Exceptions"
-      },
-      {
-        "category": "Coverage Gap",
-        "severity": "Warning",
-        "title": "Low HTS Coverage in WKR",
-        "message": "Region WKR HTS coverage is 40.7% (8,084/19,881), significantly below the 90% benchmark.",
-        "trace_metric": "WKR: 40.7%"
+        "message": "4 Critical DQA exception(s) require Sub-Recipient follow-up and reconciliation before external submission.",
+        "trace_metric": "4 Critical Exceptions"
       }
     ],
     "demographic_pyramid": {
@@ -485,15 +787,15 @@
       ],
       "male_counts": [
         0,
-        609,
-        2397,
-        25145
+        0,
+        0,
+        0
       ],
       "female_counts": [
-        0,
-        554,
-        1751,
-        7970
+        1,
+        129,
+        11032,
+        77704
       ],
       "unknown_counts": [
         0,
@@ -501,77 +803,138 @@
         0,
         0
       ],
-      "population": "VP"
+      "population": "FSW"
     },
     "geography_matrix": {
       "regions": [
         "COR",
         "LER",
+        "NER",
         "NRR",
         "WKR"
       ],
       "counties": [
-        "BUSIA",
-        "HOMA BAY",
-        "KISUMU",
-        "MACHAKOS",
-        "MAKUENI",
-        "MIGORI",
-        "MOMBASA",
+        "BARINGO",
+        "ELGEYO MARAKWET",
+        "ISIOLO",
+        "KAJIADO",
+        "KERICHO",
+        "KILIFI",
+        "KISII",
+        "KWALE",
+        "LAIKIPIA",
+        "MARSABIT",
+        "NAIROBI",
         "NAKURU",
-        "SIAYA",
-        "TURKANA",
-        "UASIN GISHU"
+        "NANDI",
+        "NYAMIRA",
+        "NYANDARUA",
+        "NYERI",
+        "SAMBURU",
+        "TAITA TAVETA",
+        "TANA RIVER",
+        "TRANSNZOIA",
+        "UASIN GISHU",
+        "VIHIGA",
+        "WAJIR",
+        "WEST POKOT"
       ],
       "sub_recipients": [
-        "ADS NYANZA",
-        "ADS PWANI",
-        "AICHM",
-        "CMMB",
-        "MILDMAY KENYA",
-        "NSA"
+        "BHESP",
+        "HOYMAS",
+        "HWWK",
+        "IRDO",
+        "NEPHAK",
+        "NIAK",
+        "NOPE",
+        "RCT",
+        "TOP PUP",
+        "TWC",
+        "TWC KWALE"
       ],
       "hierarchy": {
-        "WKR": {
-          "BUSIA": [
-            "MILDMAY KENYA"
+        "NRR": {
+          "BARINGO": [
+            "NIAK"
           ],
-          "HOMA BAY": [
-            "ADS NYANZA"
+          "ELGEYO MARAKWET": [
+            "NIAK"
           ],
-          "KISUMU": [
-            "CMMB"
+          "NAKURU": [
+            "HWWK"
           ],
-          "MIGORI": [
-            "CMMB"
+          "NANDI": [
+            "IRDO"
           ],
-          "SIAYA": [
-            "MILDMAY KENYA"
+          "TRANSNZOIA": [
+            "NIAK"
+          ],
+          "UASIN GISHU": [
+            "NIAK"
+          ],
+          "WEST POKOT": [
+            "NEPHAK"
+          ]
+        },
+        "NER": {
+          "ISIOLO": [
+            "BHESP"
+          ],
+          "MARSABIT": [
+            "BHESP"
+          ],
+          "SAMBURU": [
+            "HWWK"
+          ],
+          "WAJIR": [
+            "BHESP"
           ]
         },
         "LER": {
-          "MACHAKOS": [
-            "NSA"
+          "KAJIADO": [
+            "HOYMAS",
+            "HWWK"
           ],
-          "MAKUENI": [
-            "NSA"
+          "LAIKIPIA": [
+            "BHESP"
+          ],
+          "NAIROBI": [
+            "BHESP"
+          ],
+          "NYANDARUA": [
+            "BHESP"
+          ],
+          "NYERI": [
+            "HOYMAS"
+          ]
+        },
+        "WKR": {
+          "KERICHO": [
+            "NOPE"
+          ],
+          "KISII": [
+            "IRDO"
+          ],
+          "NYAMIRA": [
+            "IRDO"
+          ],
+          "VIHIGA": [
+            "IRDO"
           ]
         },
         "COR": {
-          "MOMBASA": [
-            "ADS PWANI",
-            "NSA"
-          ]
-        },
-        "NRR": {
-          "NAKURU": [
-            "NSA"
+          "KILIFI": [
+            "TOP PUP"
           ],
-          "TURKANA": [
-            "AICHM"
+          "KWALE": [
+            "TOP PUP",
+            "TWC KWALE"
           ],
-          "UASIN GISHU": [
-            "NSA"
+          "TAITA TAVETA": [
+            "RCT"
+          ],
+          "TANA RIVER": [
+            "TWC"
           ]
         }
       }
